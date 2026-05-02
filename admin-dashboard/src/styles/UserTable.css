@@ -1,0 +1,168 @@
+.table-container {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e7e1d4;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.user-table thead {
+  background-color: #f8f7f4;
+  border-bottom: 1px solid #e8e2d5;
+}
+
+.user-table th {
+  padding: 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #5f6780;
+  font-size: 12px;
+}
+
+.user-table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1ecdf;
+}
+
+.user-table tbody tr:hover {
+  background-color: #fcfbf8;
+}
+
+.user-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d7d0c3;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #c6a25f;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-cell small {
+  color: #6d7585;
+  display: block;
+  margin-top: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.role-admin {
+  background-color: #e9e8ff;
+  color: #4f46e5;
+}
+
+.badge.role-user {
+  background-color: #f5e6ff;
+  color: #9b3ecf;
+}
+
+.badge.status-active {
+  background-color: #e8f7ea;
+  color: #2c7a41;
+}
+
+.badge.status-inactive {
+  background-color: #fdeaea;
+  color: #b42318;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  background: #f7f5f0;
+  border: 1px solid #e4dece;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  min-width: 34px;
+  transition: all 0.2s;
+}
+
+.btn-edit:hover {
+  background-color: #e6f4ff;
+}
+
+.btn-role:hover {
+  background-color: #efe7ff;
+}
+
+.btn-status:hover {
+  background-color: #eaf8ec;
+}
+
+.btn-delete:hover {
+  background-color: #fee8e8;
+}
+
+.btn-save {
+  background-color: #1f9f59;
+  color: white;
+  border: 1px solid #1f9f59;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-cancel {
+  background-color: #d92d20;
+  color: white;
+  border: 1px solid #d92d20;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .user-table {
+    font-size: 12px;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 10px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .hide-sm {
+    display: none;
+  }
+}
