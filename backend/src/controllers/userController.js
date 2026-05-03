@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const mockStore = require('../utils/mockStore');
+const path = require('path');
+const fs = require('fs');
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/users
@@ -101,7 +103,15 @@ exports.updateUser = async (req, res, next) => {
         });
       }
 
-      const user = await mockStore.updateUser(req.params.id, { name, email, phone });
+      // Determine profileImage for mock store: prefer uploaded file, else accept profileImage string in JSON body
+      let profileImagePath = null;
+      if (req.file) {
+        profileImagePath = `/uploads/profiles/${req.file.filename}`;
+      } else if (req.body && req.body.profileImage) {
+        profileImagePath = req.body.profileImage;
+      }
+
+      const user = await mockStore.updateUser(req.params.id, { name, email, phone, profileImage: profileImagePath });
 
       if (!user) {
         return res.status(404).json({
@@ -149,6 +159,19 @@ exports.updateUser = async (req, res, next) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone) user.phone = phone;
+    
+    // Handle file upload if present
+    if (req.file) {
+      // Delete old profile image if it exists
+      if (user.profileImage) {
+        const oldImagePath = path.join(__dirname, '../../uploads/profiles', path.basename(user.profileImage));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      // Set new profile image path
+      user.profileImage = `/uploads/profiles/${req.file.filename}`;
+    }
 
     user = await user.save();
 
@@ -161,6 +184,7 @@ exports.updateUser = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {

@@ -5,6 +5,7 @@ import '../styles/UserTable.css';
 const UserTable = ({ users, onUpdate }) => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [editFile, setEditFile] = useState(null);
 
   const handleEdit = (user) => {
     setEditingId(user._id);
@@ -13,13 +14,15 @@ const UserTable = ({ users, onUpdate }) => {
       email: user.email,
       phone: user.phone,
     });
+    setEditFile(null);
   };
 
   const handleSave = async (userId) => {
     try {
-      await userService.updateUser(userId, editData.name, editData.email, editData.phone);
+      await userService.updateUser(userId, editData.name, editData.email, editData.phone, editFile);
       alert('User updated successfully');
       setEditingId(null);
+      setEditFile(null);
       onUpdate();
     } catch (err) {
       alert('Failed to update user: ' + err.message);
@@ -77,7 +80,15 @@ const UserTable = ({ users, onUpdate }) => {
           {users.map((user) => (
             <tr key={user._id}>
               <td className="user-cell">
-                <span className="avatar-chip">{user.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                {user.profileImage ? (
+                  <img
+                    src={`${(process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '').replace(/\/api$/, '')}${user.profileImage}`}
+                    alt={user.name}
+                    className="avatar-img"
+                  />
+                ) : (
+                  <span className="avatar-chip">{user.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                )}
                 <div>
                   {editingId === user._id ? (
                     <input
@@ -111,6 +122,15 @@ const UserTable = ({ users, onUpdate }) => {
                   />
                 ) : (
                   user.phone
+                )}
+                {editingId === user._id && (
+                  <div className="file-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setEditFile(e.target.files[0] || null)}
+                    />
+                  </div>
                 )}
               </td>
               <td>

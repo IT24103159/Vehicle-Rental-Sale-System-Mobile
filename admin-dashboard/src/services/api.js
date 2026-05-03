@@ -62,8 +62,22 @@ export const userService = {
     }
   },
 
-  updateUser: async (userId, name, email, phone) => {
+  updateUser: async (userId, name, email, phone, file = null) => {
     try {
+      // Support optional file upload when a `file` argument is provided
+      if (file) {
+        const formData = new FormData();
+        if (name) formData.append('name', name);
+        if (email) formData.append('email', email);
+        if (phone) formData.append('phone', phone);
+        formData.append('profileImage', file);
+
+        const response = await axiosInstance.put(`/users/${userId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      }
+
       const response = await axiosInstance.put(`/users/${userId}`, {
         name,
         email,

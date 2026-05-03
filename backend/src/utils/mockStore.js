@@ -11,6 +11,7 @@ const users = [
     password: 'admin123',
     role: 'admin',
     isActive: true,
+    profileImage: null,
     createdAt: now(),
     updatedAt: now(),
   },
@@ -22,6 +23,7 @@ const users = [
     password: 'User123!',
     role: 'user',
     isActive: true,
+    profileImage: null,
     createdAt: now(),
     updatedAt: now(),
   },
@@ -41,6 +43,7 @@ const formatAuthUser = (user) => ({
   email: user.email,
   phone: user.phone,
   role: user.role,
+  profileImage: user.profileImage || null,
 });
 
 const findByEmail = async (email) => users.find((user) => user.email === email.toLowerCase()) || null;
@@ -57,6 +60,7 @@ const createUser = async ({ name, email, phone, password, role = 'user' }) => {
     phone,
     password,
     role: role === 'admin' ? 'admin' : 'user',
+    profileImage: null,
     isActive: true,
     createdAt: now(),
     updatedAt: now(),
@@ -73,6 +77,7 @@ const updateUser = async (id, updates) => {
   if (updates.name) user.name = updates.name;
   if (updates.email) user.email = updates.email.toLowerCase();
   if (updates.phone) user.phone = updates.phone;
+  if (updates.profileImage) user.profileImage = updates.profileImage;
   user.updatedAt = now();
 
   return user;

@@ -10,6 +10,7 @@ const ProfileSettingsPage = () => {
   const [nic, setNic] = useState('');
   const [licenseUrl, setLicenseUrl] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [profileFile, setProfileFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +27,9 @@ const ProfileSettingsPage = () => {
     setError('');
     setMessage('');
 
-    if (!user?._id) {
+    const currentUserId = user?._id || user?.id;
+
+    if (!currentUserId) {
       setError('User session not found. Please login again.');
       return;
     }
@@ -38,7 +41,13 @@ const ProfileSettingsPage = () => {
 
     try {
       setIsSaving(true);
-      const response = await userService.updateUser(user._id, fullName.trim(), user.email, phoneNumber.trim());
+      const response = await userService.updateUser(
+        currentUserId,
+        fullName.trim(),
+        user.email,
+        phoneNumber.trim(),
+        profileFile
+      );
 
       if (response.success && response.user) {
         updateUserData(response.user);
@@ -49,7 +58,8 @@ const ProfileSettingsPage = () => {
         }
       }
     } catch (err) {
-      setError(err.message || 'Failed to update profile.');
+      const firstValidationError = err?.errors?.[0]?.msg;
+      setError(firstValidationError || err?.message || 'Failed to update profile.');
     } finally {
       setIsSaving(false);
     }
@@ -114,11 +124,32 @@ const ProfileSettingsPage = () => {
               <label htmlFor="license">DRIVING LICENSE URL</label>
               <input
                 id="license"
-                type="url"
+                type="text"
                 value={licenseUrl}
                 onChange={(e) => setLicenseUrl(e.target.value)}
-                placeholder="https://link-to-your-license-image"
+                placeholder="Optional"
               />
+              <small>Optional field. It is not required for profile update.</small>
+            </div>
+
+            <div className="field-group">
+              <label htmlFor="profileImage">PROFILE IMAGE</label>
+              {user?.profileImage ? (
+                <div style={{ marginBottom: 8 }}>
+                  <img
+                    src={`${(process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '').replace(/\/api$/, '')}${user.profileImage}`}
+                    alt="avatar"
+                    style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }}
+                  />
+                </div>
+              ) : null}
+              <input
+                id="profileImage"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setProfileFile(e.target.files[0] || null)}
+              />
+              <small>Optional: upload a new profile image (max 5MB)</small>
             </div>
 
             <div className="field-group">

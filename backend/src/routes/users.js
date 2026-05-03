@@ -10,6 +10,7 @@ const {
   toggleUserStatus,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // All user routes require authentication
 router.use(protect);
@@ -29,10 +30,24 @@ router.get('/:id', getUserById);
 // @access  Private
 router.put(
   '/:id',
+  upload.single('profileImage'),
   [
-    body('name').optional().notEmpty().withMessage('Name cannot be empty'),
-    body('email').optional().isEmail().withMessage('Please include a valid email'),
-    body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
+    body('name')
+      .optional()
+      .trim()
+      .notEmpty().withMessage('Name cannot be empty')
+      .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+    body('email')
+      .optional()
+      .trim()
+      .isEmail().withMessage('Please include a valid email')
+      .normalizeEmail(),
+    body('phone')
+      .optional()
+      .trim()
+      .notEmpty().withMessage('Phone cannot be empty')
+      .matches(/^[0-9+\-\s()]+$/).withMessage('Phone number contains invalid characters')
+      .isLength({ min: 10, max: 20 }).withMessage('Phone must be between 10 and 20 characters'),
   ],
   updateUser
 );
@@ -48,7 +63,11 @@ router.delete('/:id', authorize('admin'), deleteUser);
 router.put(
   '/:id/role',
   authorize('admin'),
-  [body('role', 'Role must be "user" or "admin"').isIn(['user', 'admin'])],
+  [
+    body('role')
+      .notEmpty().withMessage('Role is required')
+      .isIn(['user', 'admin']).withMessage('Role must be "user" or "admin"')
+  ],
   updateUserRole
 );
 

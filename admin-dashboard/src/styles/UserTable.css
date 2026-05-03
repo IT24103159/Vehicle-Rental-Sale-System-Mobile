@@ -60,6 +60,18 @@
   font-weight: 700;
 }
 
+.avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.file-upload input[type="file"] {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
 .user-cell small {
   color: #6d7585;
   display: block;
