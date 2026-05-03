@@ -2,10 +2,16 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 
 const getBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    return 'http://localhost:5000/api';
+  if (__DEV__) {
+    // Local development 
+    if (Platform.OS === 'web') {
+      return 'http://localhost:5000/api';
+    }
+
+    return 'http://10.45.50.182:5000/api';
   }
-  return 'http://10.45.50.182:5000/api';
+  // Production - Render deployed version
+  return 'https://vehicle-rental-sale-system-mobile.onrender.com/api';
 };
 
 const api = axios.create({
