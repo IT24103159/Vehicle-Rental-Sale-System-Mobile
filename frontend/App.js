@@ -67,38 +67,50 @@ const Navigation = () => {
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator
-        initialRouteName={initialRoute}
         screenOptions={{
           headerShown: false,
           cardStyle: { backgroundColor: '#f0ebe0' },
         }}
       >
-        {/* Public Screens */}
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
-        <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
-        <Stack.Screen name="RentBooking" component={RentBookingScreen} />
-
-        {/* Customer Screens */}
-        <Stack.Screen name="CustomerHome" component={CustomerDashboard} />
-        <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen} />
-        <Stack.Screen name="Payment" component={PaymentScreen} />
-        <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
-        <Stack.Screen name="RentalHistory" component={RentalHistoryScreen} />
-        <Stack.Screen name="CustomerNotifications" component={CustomerNotificationsScreen} />
-
-        {/* Admin Protected Screens */}
-        <Stack.Screen name="AdminHome" component={AdminDashboard} />
-        <Stack.Screen name="FleetManagement" component={FleetManagementScreen} />
-        <Stack.Screen name="AdminPayments" component={AdminPaymentsScreen} />
-        <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
-        <Stack.Screen name="AddSaleVehicle" component={AddSaleVehicleScreen} />
-        <Stack.Screen name="UserManagement" component={UserManagementScreen} />
-        <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
-        <Stack.Screen name="Fleet" component={FleetManagementScreen} />
-
+        {user == null ? (
+          // --- Auth / Public Stack ---
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
+            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
+          </>
+        ) : user.role === 'Admin' ? (
+          // --- Admin Stack ---
+          <>
+            <Stack.Screen name="AdminHome" component={AdminDashboard} />
+            <Stack.Screen name="FleetManagement" component={FleetManagementScreen} />
+            <Stack.Screen name="AdminPayments" component={AdminPaymentsScreen} />
+            <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
+            <Stack.Screen name="AddSaleVehicle" component={AddSaleVehicleScreen} />
+            <Stack.Screen name="UserManagement" component={UserManagementScreen} />
+            <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
+            <Stack.Screen name="Fleet" component={FleetManagementScreen} />
+            {/* Allow admin to view galleries if needed */}
+            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
+            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
+          </>
+        ) : (
+          // --- Customer Stack ---
+          <>
+            <Stack.Screen name="CustomerHome" component={CustomerDashboard} />
+            <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen} />
+            <Stack.Screen name="RentBooking" component={RentBookingScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
+            <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
+            <Stack.Screen name="RentalHistory" component={RentalHistoryScreen} />
+            <Stack.Screen name="CustomerNotifications" component={CustomerNotificationsScreen} />
+            {/* Allow customer to access galleries and booking */}
+            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
+            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 
+import CustomHeader from '../components/CustomHeader';
+
 const { width } = Dimensions.get('window');
 
 const AdminDashboard = ({ navigation }) => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const metrics = [
     { title: 'Total Users', value: '124', icon: '👥', trend: '+12%', trendUp: true },
@@ -37,18 +39,9 @@ const AdminDashboard = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
+      <CustomHeader title={`Welcome, ${user?.fullName || 'Admin'}`} showBack={false} showLogout={true} />
+      
       <ScrollView showsVerticalScrollIndicator={false}>
-        
-        {/* Top Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Admin Dashboard</Text>
-            <Text style={styles.headerSubtitle}>Welcome back, {user?.fullName || 'Admin'}</Text>
-          </View>
-          <TouchableOpacity onPress={logout} style={styles.logoutPill}>
-            <Text style={styles.logoutTxt}>Logout</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Metrics Grid */}
         <View style={styles.metricsContainer}>
@@ -73,9 +66,9 @@ const AdminDashboard = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Management Console</Text>
           <View style={styles.actionsGrid}>
             {adminActions.map((a, i) => (
-              <TouchableOpacity 
-                key={i} 
-                style={styles.actionCard} 
+              <TouchableOpacity
+                key={i}
+                style={styles.actionCard}
                 activeOpacity={0.7}
                 onPress={() => a.screen && navigation.navigate(a.screen)}
               >
@@ -92,28 +85,6 @@ const AdminDashboard = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Recent Activity Placeholder */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent System Activity</Text>
-          <View style={styles.activityLogs}>
-            <View style={styles.logItem}>
-              <View style={styles.logIcon}><Text>🆕</Text></View>
-              <View style={styles.logDetails}>
-                <Text style={styles.logTitle}>New User Registered</Text>
-                <Text style={styles.logSub}>Kasun Perera joined the platform</Text>
-              </View>
-              <Text style={styles.logTime}>2m ago</Text>
-            </View>
-            <View style={styles.logItem}>
-              <View style={styles.logIcon}><Text>💳</Text></View>
-              <View style={styles.logDetails}>
-                <Text style={styles.logTitle}>Payment Received</Text>
-                <Text style={styles.logSub}>Booking #B1024 slip uploaded</Text>
-              </View>
-              <Text style={styles.logTime}>15m ago</Text>
-            </View>
-          </View>
-        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>

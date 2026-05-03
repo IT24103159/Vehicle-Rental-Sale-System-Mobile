@@ -8,10 +8,10 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { AuthContext } from '../../context/AuthContext';
+import CustomHeader from '../components/CustomHeader';
 
 const CustomerDashboard = ({ navigation }) => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext); // logout logic is now inside CustomHeader
 
   const menuItems = [
     { title: 'Update Profile', icon: '👤', desc: 'Edit your personal details & password', screen: 'UpdateProfile' },
@@ -25,18 +25,9 @@ const CustomerDashboard = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
+      <CustomHeader title="Customer Dashboard" showBack={false} showLogout={true} />
+      
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.brandName}>SAMARASINGHE <Text style={styles.brandGold}>MOTORS</Text></Text>
-            <Text style={styles.headerSub}>Customer Dashboard</Text>
-          </View>
-          <TouchableOpacity onPress={logout} style={styles.logoutPill}>
-            <Text style={styles.logoutTxt}>Logout</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
