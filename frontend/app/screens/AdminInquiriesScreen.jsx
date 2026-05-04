@@ -118,6 +118,39 @@ const AdminInquiriesScreen = ({ navigation }) => {
     }
   };
 
+  const handleDeleteInquiry = (id) => {
+    if (Platform.OS === 'web') {
+      if (!window.confirm("Are you sure you want to delete this inquiry? This action cannot be undone.")) return;
+      executeDelete(id);
+    } else {
+      Alert.alert(
+        "Delete Inquiry",
+        "Are you sure? This action will permanently remove the inquiry from the database.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Delete", style: "destructive", onPress: () => executeDelete(id) }
+        ]
+      );
+    }
+  };
+
+  const executeDelete = async (id) => {
+    try {
+      setSubmitting(true);
+      await api.delete(`/inquiries/admin/${id}`);
+      if (Platform.OS === 'web') window.alert("Inquiry deleted successfully");
+      else Alert.alert("Success", "Inquiry deleted successfully");
+      fetchInquiries();
+    } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to delete inquiry';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert("Error", msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const renderInquiryCard = (inq) => {
     const isBuyNow = inq.inquiryType === 'BUY_NOW';
     return (
@@ -177,6 +210,14 @@ const AdminInquiriesScreen = ({ navigation }) => {
               <Text style={styles.finalizeTxt}>✅ Finalize Sale</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity 
+            style={styles.deleteBtn} 
+            onPress={() => handleDeleteInquiry(inq._id)}
+            disabled={submitting}
+          >
+            <Text style={styles.deleteBtnTxt}>🗑️</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -283,6 +324,8 @@ const styles = StyleSheet.create({
   btnTxt: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
   finalizeBtn: { flex: 1.5, backgroundColor: '#c9a052', padding: 12, borderRadius: 8, alignItems: 'center' },
   finalizeTxt: { color: '#111', fontWeight: 'bold', fontSize: 13 },
+  deleteBtn: { backgroundColor: '#fee2e2', padding: 12, borderRadius: 8, alignItems: 'center', width: 45 },
+  deleteBtnTxt: { fontSize: 14 },
 
   // Modal
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },

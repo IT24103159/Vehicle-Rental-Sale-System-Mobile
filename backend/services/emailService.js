@@ -202,3 +202,101 @@ exports.sendRejectionEmail = async (payment, booking, customer) => {
     console.error('Error sending rejection email:', error);
   }
 };
+
+exports.sendInquiryReplyEmail = async (customer, vehicle, adminReply, status) => {
+  try {
+    const statusColor = status === 'ACCEPTED' ? '#28a745' : status === 'REJECTED' ? '#dc3545' : '#17a2b8';
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee;">
+      <div style="background-color: ${statusColor}; padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">Inquiry Update</h1>
+      </div>
+      <div style="padding: 20px;">
+        <h2 style="color: #333;">Dear ${customer.fullName},</h2>
+        <p style="color: #555; line-height: 1.6;">
+          An update has been made regarding your inquiry for <strong>${vehicle.brand} ${vehicle.name}</strong>.
+        </p>
+        <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${statusColor}; margin: 20px 0;">
+          <p style="margin: 0 0 10px 0; color: #333;"><strong>Admin Reply:</strong></p>
+          <p style="margin: 0; color: #555;">${adminReply}</p>
+        </div>
+        <p style="color: #555; line-height: 1.6;">
+          <strong>Current Status:</strong> ${status}
+        </p>
+      </div>
+    </div>
+    `;
+
+    await transporter.sendMail({
+      from: '"Samarasinghe Motors" <lionintheloop.dev@gmail.com>',
+      to: customer.email,
+      subject: `Update on your inquiry for ${vehicle.brand} ${vehicle.name}`,
+      html: htmlContent
+    });
+    console.log('Inquiry reply email sent to', customer.email);
+  } catch (error) {
+    console.error('Error sending inquiry reply email:', error);
+  }
+};
+
+exports.sendSaleFinalizedEmail = async (customer, vehicle) => {
+  try {
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee;">
+      <div style="background-color: #28a745; padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">Congratulations!</h1>
+      </div>
+      <div style="padding: 20px;">
+        <h2 style="color: #333;">Dear ${customer.fullName},</h2>
+        <p style="color: #555; line-height: 1.6;">
+          Congratulations! Your purchase request for the <strong>${vehicle.brand} ${vehicle.name}</strong> has been finalized and accepted.
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+          Our sales team will contact you shortly to guide you through the payment and vehicle handover process. We look forward to seeing you at Samarasinghe Motors!
+        </p>
+      </div>
+    </div>
+    `;
+
+    await transporter.sendMail({
+      from: '"Samarasinghe Motors" <lionintheloop.dev@gmail.com>',
+      to: customer.email,
+      subject: `Purchase Approved - ${vehicle.brand} ${vehicle.name}`,
+      html: htmlContent
+    });
+    console.log('Sale finalized email sent to', customer.email);
+  } catch (error) {
+    console.error('Error sending sale finalized email:', error);
+  }
+};
+
+exports.sendSaleRejectedEmail = async (customer, vehicle) => {
+  try {
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee;">
+      <div style="background-color: #6c757d; padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">Vehicle Sold Update</h1>
+      </div>
+      <div style="padding: 20px;">
+        <h2 style="color: #333;">Dear ${customer.fullName},</h2>
+        <p style="color: #555; line-height: 1.6;">
+          We regret to inform you that the <strong>${vehicle.brand} ${vehicle.name}</strong> you inquired about has been sold to another buyer.
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+          We apologize for any disappointment and invite you to browse our latest vehicle inventory for other great options.
+        </p>
+      </div>
+    </div>
+    `;
+
+    await transporter.sendMail({
+      from: '"Samarasinghe Motors" <lionintheloop.dev@gmail.com>',
+      to: customer.email,
+      subject: `Update: ${vehicle.brand} ${vehicle.name} has been Sold`,
+      html: htmlContent
+    });
+    console.log('Sale rejected email sent to', customer.email);
+  } catch (error) {
+    console.error('Error sending sale rejected email:', error);
+  }
+};

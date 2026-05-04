@@ -13,6 +13,7 @@ import {
   Image
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import api from '../../services/api';
 
 const AddSaleVehicleScreen = ({ navigation }) => {
@@ -30,6 +31,7 @@ const AddSaleVehicleScreen = ({ navigation }) => {
   });
 
   const [selectedImages, setSelectedImages] = useState([]);
+  const [scanReport, setScanReport] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const pickImages = async () => {
@@ -48,6 +50,26 @@ const AddSaleVehicleScreen = ({ navigation }) => {
 
   const removeImage = (index) => {
     setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
+
+  const pickScanReport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setScanReport(result.assets[0]);
+      }
+    } catch (error) {
+      console.log('Error picking document', error);
+      Alert.alert("Error", "Could not pick PDF document.");
+    }
+  };
+
+  const removeScanReport = () => {
+    setScanReport(null);
   };
 
   const handleSubmit = async () => {
@@ -80,6 +102,21 @@ const AddSaleVehicleScreen = ({ navigation }) => {
             uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
             name: filename,
             type
+          });
+        }
+      }
+
+      // Append Scan Report
+      if (scanReport) {
+        if (Platform.OS === 'web') {
+          const res = await fetch(scanReport.uri);
+          const blob = await res.blob();
+          data.append('scanReport', blob, scanReport.name || 'report.pdf');
+        } else {
+          data.append('scanReport', {
+            uri: Platform.OS === 'ios' ? scanReport.uri.replace('file://', '') : scanReport.uri,
+            name: scanReport.name || 'report.pdf',
+            type: scanReport.mimeType || 'application/pdf'
           });
         }
       }
@@ -174,7 +211,22 @@ const AddSaleVehicleScreen = ({ navigation }) => {
             )}
           </ScrollView>
 
-          <TextInput style={[styles.input, {height: 80}]} placeholder="Description" multiline value={formData.description} onChangeText={v => inputChange('description', v)} />
+          <Text style={styles.sectionLabel}>DOCUMENTS</Text>
+          <Text style={styles.smallLabel}>VEHICLE HEALTH SCAN REPORT (PDF ONLY)</Text>
+          {scanReport ? (
+            <View style={styles.pdfContainer}>
+              <Text style={styles.pdfText}>📄 {scanReport.name}</Text>
+              <TouchableOpacity onPress={removeScanReport} style={styles.removePdfBtn}>
+                <Text style={styles.removePdfTxt}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.uploadPdfBtn} onPress={pickScanReport}>
+              <Text style={styles.uploadPdfTxt}>+ Upload PDF Report</Text>
+            </TouchableOpacity>
+          )}
+
+          <TextInput style={[styles.input, {height: 80, marginTop: 15}]} placeholder="Description" multiline value={formData.description} onChangeText={v => inputChange('description', v)} />
 
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
             {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.submitBtnTxt}>Add to Fleet</Text>}
@@ -210,6 +262,14 @@ const styles = StyleSheet.create({
   removeImgTxt: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   addImageBtn: { width: 80, height: 80, borderRadius: 10, borderStyle: 'dashed', borderWidth: 1, borderColor: '#444', justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e212a' },
   addImageTxt: { fontSize: 24, color: '#c9a052', marginBottom: 2 },
+
+  // PDF Styles
+  uploadPdfBtn: { backgroundColor: '#1e212a', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#444', borderStyle: 'dashed', alignItems: 'center', marginBottom: 15 },
+  uploadPdfTxt: { color: '#c9a052', fontWeight: 'bold' },
+  pdfContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e212a', padding: 15, borderRadius: 10, marginBottom: 15 },
+  pdfText: { color: '#fff', flex: 1, marginRight: 10 },
+  removePdfBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5 },
+  removePdfTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
 });
 
 export default AddSaleVehicleScreen;

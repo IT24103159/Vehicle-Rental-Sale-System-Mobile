@@ -10,7 +10,7 @@ exports.uploadPayment = async (req, res) => {
     // If a file was uploaded, construct its URL. Otherwise, check if a URL string was provided (for backward compatibility).
     let bankSlipUrl = req.body.bankSlipUrl;
     if (req.file) {
-      bankSlipUrl = `/uploads/slips/${req.file.filename}`;
+      bankSlipUrl = req.file.path;
     }
 
     if (!bankSlipUrl) {
@@ -87,6 +87,26 @@ exports.updatePaymentStatus = async (req, res) => {
     }
 
     res.json(payment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getMyPayments = async (req, res) => {
+  try {
+    // 1. Find all bookings for this customer
+    const bookings = await Booking.find({ customerId: req.user._id }).select('_id');
+    const bookingIds = bookings.map(b => b._id);
+
+    // 2. Find all payments for those bookings
+    const payments = await Payment.find({ bookingId: { $in: bookingIds } })
+      .populate({
+        path: 'bookingId',
+        populate: { path: 'vehicleRentId', select: 'name brand' }
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(payments);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

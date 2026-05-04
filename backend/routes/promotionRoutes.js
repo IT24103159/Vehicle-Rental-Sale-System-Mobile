@@ -6,16 +6,20 @@ const {
   getActivePromotions,
   getAllPromotions,
   deletePromotion,
-  verifyPromoCode
+  verifyPromoCode,
+  updatePromotion
 } = require('../controllers/promotionController');
+
+const { upload } = require('../middleware/uploadMiddleware');
 
 // Public or Customer Routes
 router.get('/active', getActivePromotions);
 router.post('/verify', protect, verifyPromoCode);
 
 // Admin Routes
-router.post('/', protect, adminOnly, createPromotion);
+router.post('/', protect, adminOnly, upload.single('image'), createPromotion);
 router.get('/', protect, adminOnly, getAllPromotions);
+router.put('/:id', protect, adminOnly, upload.single('image'), updatePromotion);
 router.delete('/:id', protect, adminOnly, deletePromotion);
 
 module.exports = router;

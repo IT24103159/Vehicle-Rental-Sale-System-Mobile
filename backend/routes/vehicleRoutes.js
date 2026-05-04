@@ -23,14 +23,14 @@ router.get('/trending', getTrendingVehicles);
 router.get('/rent', getAllRentVehicles);
 router.get('/rent/:id', getRentVehicleById);
 router.post('/rent', protect, adminOnly, upload.array('images', 5), createRentVehicle);
-router.put('/rent/:id', protect, adminOnly, updateRentVehicle);
+router.put('/rent/:id', protect, adminOnly, upload.array('images', 5), updateRentVehicle);
 router.delete('/rent/:id', protect, adminOnly, deleteRentVehicle);
 
 // Sale Endpoints
 router.get('/sale', getAllSaleVehicles);
 router.get('/sale/:id', getSaleVehicleById);
-router.post('/sale', protect, adminOnly, upload.array('images', 5), createSaleVehicle);
-router.put('/sale/:id', protect, adminOnly, updateSaleVehicle);
+router.post('/sale', protect, adminOnly, upload.fields([{ name: 'images', maxCount: 5 }, { name: 'scanReport', maxCount: 1 }]), createSaleVehicle);
+router.put('/sale/:id', protect, adminOnly, upload.fields([{ name: 'images', maxCount: 5 }, { name: 'scanReport', maxCount: 1 }]), updateSaleVehicle);
 router.delete('/sale/:id', protect, adminOnly, deleteSaleVehicle);
 
 module.exports = router;

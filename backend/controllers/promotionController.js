@@ -4,6 +4,10 @@ const Notification = require('../models/Notification');
 exports.createPromotion = async (req, res) => {
   try {
     const { code, discountPercent, description, startDate, endDate } = req.body;
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = req.file.path;
+    }
 
     const promo = await Promotion.create({
       code: code.toUpperCase(),
@@ -11,6 +15,7 @@ exports.createPromotion = async (req, res) => {
       description,
       startDate,
       endDate,
+      imageUrl,
       adminId: req.user._id
     });
 
@@ -18,6 +23,7 @@ exports.createPromotion = async (req, res) => {
     await Notification.create({
       message: `New Promo Code: ${code} - Get ${discountPercent}% OFF! (${description})`,
       type: 'Promotion',
+      imageUrl: imageUrl,
       userId: null // null means it's a broadcast to everyone
     });
 
@@ -60,6 +66,41 @@ exports.deletePromotion = async (req, res) => {
     await Promotion.findByIdAndDelete(req.params.id);
     res.json({ message: 'Promotion deleted successfully' });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updatePromotion = async (req, res) => {
+  try {
+    const { code, discountPercent, description, startDate, endDate, existingImage } = req.body;
+    
+    let imageUrl = existingImage || null;
+    if (req.file) {
+      imageUrl = req.file.path;
+    }
+
+    const promo = await Promotion.findByIdAndUpdate(
+      req.params.id,
+      {
+        code: code.toUpperCase(),
+        discountPercent,
+        description,
+        startDate,
+        endDate,
+        imageUrl
+      },
+      { new: true }
+    );
+
+    if (!promo) {
+      return res.status(404).json({ message: 'Promotion not found' });
+    }
+
+    res.json(promo);
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Promo code already exists' });
+    }
     res.status(500).json({ message: error.message });
   }
 };

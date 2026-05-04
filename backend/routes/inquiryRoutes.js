@@ -7,7 +7,8 @@ const {
   getMyInquiries,
   updateInquiryStatus,
   finalizeSale,
-  getTrendingVehicles
+  getTrendingVehicles,
+  deleteInquiry
 } = require('../controllers/inquiryController');
 
 // Customer Routes
@@ -19,5 +20,6 @@ router.get('/admin/all', protect, adminOnly, getAdminInquiries);
 router.put('/admin/status/:id', protect, adminOnly, updateInquiryStatus);
 router.post('/admin/finalize-sale', protect, adminOnly, finalizeSale);
 router.get('/trending', protect, adminOnly, getTrendingVehicles);
+router.delete('/admin/:id', protect, adminOnly, deleteInquiry);
 
 module.exports = router;

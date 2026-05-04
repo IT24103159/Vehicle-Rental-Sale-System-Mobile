@@ -67,32 +67,32 @@ const FleetManagementScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      
+
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backBtnTxt}>← Dashboard</Text>
+            <Text style={styles.backBtnTxt}>← </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>🚙 Vehicle Management</Text>
-          <TouchableOpacity 
+          <Text style={styles.title}>Vehicle Management</Text>
+          <TouchableOpacity
             style={styles.addBtn}
             onPress={() => navigation.navigate('AddVehicle')}
           >
             <Text style={styles.addBtnTxt}>+ Add Vehicle</Text>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'rent' && styles.activeTab]} 
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'rent' && styles.activeTab]}
             onPress={() => setActiveTab('rent')}
           >
             <Text style={[styles.tabTxt, activeTab === 'rent' && styles.activeTabTxt]}>Rent Vehicles</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'sale' && styles.activeTab]} 
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'sale' && styles.activeTab]}
             onPress={() => setActiveTab('sale')}
           >
             <Text style={[styles.tabTxt, activeTab === 'sale' && styles.activeTabTxt]}>Sale Vehicles</Text>
@@ -108,7 +108,7 @@ const FleetManagementScreen = ({ navigation }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.table}>
-              
+
               {/* Table Header */}
               <View style={styles.tableHeader}>
                 <Text style={[styles.th, { width: 250 }]}>VEHICLE</Text>
@@ -127,7 +127,7 @@ const FleetManagementScreen = ({ navigation }) => {
                     {v.images && v.images.length > 0 ? (
                       <Image source={{ uri: v.images[0] }} style={styles.vImage} />
                     ) : (
-                      <View style={styles.vImagePlaceholder}><Text style={{fontSize: 10}}>No Img</Text></View>
+                      <View style={styles.vImagePlaceholder}><Text style={{ fontSize: 10 }}>No Img</Text></View>
                     )}
                     <View style={{ flex: 1 }}>
                       <Text style={styles.vName} numberOfLines={1}>{v.name}</Text>
@@ -159,14 +159,14 @@ const FleetManagementScreen = ({ navigation }) => {
                   {/* Status Column */}
                   <View style={[styles.td, { width: 120, justifyContent: 'center' }]}>
                     <View style={[
-                      styles.statusPill, 
-                      v.status === 'Available' ? styles.statusGreen : 
-                      v.status === 'Pending' ? styles.statusOrange : styles.statusRed
+                      styles.statusPill,
+                      v.status === 'Available' ? styles.statusGreen :
+                        v.status === 'Pending' ? styles.statusOrange : styles.statusRed
                     ]}>
                       <Text style={[
                         styles.statusTxt,
-                        v.status === 'Available' ? styles.statusGreenTxt : 
-                        v.status === 'Pending' ? styles.statusOrangeTxt : styles.statusRedTxt
+                        v.status === 'Available' ? styles.statusGreenTxt :
+                          v.status === 'Pending' ? styles.statusOrangeTxt : styles.statusRedTxt
                       ]}>• {v.status?.toUpperCase() || 'AVAILABLE'}</Text>
                     </View>
                   </View>
@@ -178,11 +178,9 @@ const FleetManagementScreen = ({ navigation }) => {
 
                   {/* Actions Column */}
                   <View style={[styles.td, { width: 120, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }]}>
-                    <TouchableOpacity style={styles.actionBtn}>
-                      <Text style={{ fontSize: 12 }}>👁️</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.actionBtn} 
+
+                    <TouchableOpacity
+                      style={styles.actionBtn}
                       onPress={() => navigation.navigate('AddVehicle', { vehicle: v, type: activeTab })}
                     >
                       <Text style={{ fontSize: 12 }}>✏️</Text>
@@ -212,11 +210,11 @@ const FleetManagementScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f9f9f9' },
   loadingArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  
+
   header: { paddingHorizontal: 20, paddingTop: 15, backgroundColor: '#f0ebe0', borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
   headerTop: { marginBottom: 10 },
   backBtnTxt: { color: '#c9a052', fontWeight: 'bold' },
-  
+
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#0f1117' },
   addBtn: { backgroundColor: '#111318', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
@@ -231,17 +229,17 @@ const styles = StyleSheet.create({
   table: { backgroundColor: '#ffffff', margin: 20, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#e0e0e0', minWidth: 950 },
   tableHeader: { flexDirection: 'row', backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 14 },
   th: { fontSize: 10, fontWeight: 'bold', color: '#888', paddingHorizontal: 15, textTransform: 'uppercase', letterSpacing: 0.5 },
-  
+
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f4f4f4', paddingVertical: 15 },
   td: { paddingHorizontal: 15 },
-  
+
   vImage: { width: 50, height: 35, borderRadius: 4, marginRight: 15, resizeMode: 'cover' },
   vImagePlaceholder: { width: 50, height: 35, borderRadius: 4, marginRight: 15, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
   vName: { fontSize: 13, fontWeight: 'bold', color: '#111318' },
   vSub: { fontSize: 11, color: '#888', marginTop: 2 },
 
   specTxt: { fontSize: 11, color: '#555', marginBottom: 2 },
-  
+
   condTxt: { fontSize: 11, fontWeight: '600', color: '#333' },
   condSub: { fontSize: 10, color: '#888', marginTop: 2 },
 
@@ -256,7 +254,7 @@ const styles = StyleSheet.create({
   priceTxt: { fontSize: 13, fontWeight: 'bold', color: '#c9a052' },
 
   actionBtn: { width: 28, height: 28, borderRadius: 6, borderWidth: 1, borderColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
-  
+
   emptyState: { padding: 40, alignItems: 'center' },
   emptyTxt: { color: '#888', fontSize: 13 },
 });

@@ -50,6 +50,13 @@ const PaymentScreen = ({ route, navigation }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+         if (Platform.OS === 'web') window.alert("Only PDF, JPEG, and PNG files are allowed.");
+         else Alert.alert('Error', "Only PDF, JPEG, and PNG files are allowed.");
+         e.target.value = null;
+         return;
+      }
       setBankSlipFile(file);
       // Create a local URL for previewing images
       if (file.type.startsWith('image/')) {
@@ -79,12 +86,19 @@ const PaymentScreen = ({ route, navigation }) => {
       });
 
       if (Platform.OS === 'web') {
-        window.alert('Payment Uploaded Successfully. Waiting for Admin Approval.');
-        navigation.navigate('HomeTab');
+        window.alert('Payment Uploaded Successfully! Your booking will be confirmed after admin approval.');
+        navigation.navigate('HomeTab', { screen: 'HomeMain' });
       } else {
-        Alert.alert('Success', 'Payment Uploaded Successfully. Waiting for Admin Approval.', [
-          { text: 'OK', onPress: () => navigation.navigate('HomeTab') }
-        ]);
+        Alert.alert(
+          'Success', 
+          'Payment Uploaded Successfully! Your booking will be confirmed after admin approval.', 
+          [
+            { 
+              text: 'OK', 
+              onPress: () => navigation.navigate('HomeTab', { screen: 'HomeMain' }) 
+            }
+          ]
+        );
       }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to upload payment.');

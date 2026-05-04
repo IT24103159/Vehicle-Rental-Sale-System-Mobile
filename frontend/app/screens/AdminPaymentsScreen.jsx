@@ -12,6 +12,7 @@ import {
   Image,
   Modal,
   Platform,
+  Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -126,11 +127,16 @@ const AdminPaymentsScreen = ({ navigation }) => {
     const fullUrl = getFileUrl(url);
     if (!fullUrl) return;
 
-    if (fullUrl.toLowerCase().endsWith('.pdf')) {
+    // Check for PDF in a more robust way (handling case sensitivity and potential query parameters)
+    const isPDF = fullUrl.toLowerCase().includes('.pdf');
+
+    if (isPDF) {
       if (Platform.OS === 'web') {
         window.open(fullUrl, '_blank');
       } else {
-        Alert.alert('PDF', 'PDF viewing requires a specific module on mobile. Please check via web dashboard.');
+        Linking.openURL(fullUrl).catch(err => {
+          Alert.alert('Error', 'Could not open PDF. Please ensure a PDF viewer is installed.');
+        });
       }
     } else {
       setSelectedSlip(fullUrl);

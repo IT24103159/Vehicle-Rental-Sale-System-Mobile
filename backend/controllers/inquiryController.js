@@ -1,6 +1,7 @@
 const Inquiry = require('../models/Inquiry');
 const VehicleSale = require('../models/VehicleSale');
 const User = require('../models/User');
+const { sendInquiryReplyEmail, sendSaleFinalizedEmail, sendSaleRejectedEmail } = require('../services/emailService');
 
 // Create Inquiry
 exports.createInquiry = async (req, res) => {
@@ -64,7 +65,10 @@ exports.updateInquiryStatus = async (req, res) => {
     inquiry.adminReply = adminReply;
     await inquiry.save();
 
-    // NOTE: In a production app, trigger EmailService here to send status update to customer
+    // Send email to customer
+    if (inquiry.customerId && inquiry.customerId.email) {
+      sendInquiryReplyEmail(inquiry.customerId, inquiry.vehicleSaleId, adminReply, status);
+    }
 
     res.json({ message: 'Inquiry updated successfully', inquiry });
   } catch (error) {
@@ -85,15 +89,20 @@ exports.finalizeSale = async (req, res) => {
     await vehicle.save();
 
     // 2. Accept winning inquiry
-    const winningInquiry = await Inquiry.findById(inquiryId);
+    const winningInquiry = await Inquiry.findById(inquiryId).populate('customerId');
     if (winningInquiry) {
       winningInquiry.status = 'ACCEPTED';
       winningInquiry.adminReply = 'Congratulations! Your purchase has been approved. We will contact you for payment procedures.';
       await winningInquiry.save();
-      // NOTE: Send Win Email here
+      
+      if (winningInquiry.customerId && winningInquiry.customerId.email) {
+        sendSaleFinalizedEmail(winningInquiry.customerId, vehicle);
+      }
     }
 
     // 3. Reject all other pending inquiries for this vehicle
+    const pendingInquiries = await Inquiry.find({ vehicleSaleId: vehicleId, _id: { $ne: inquiryId }, status: 'PENDING' }).populate('customerId');
+    
     await Inquiry.updateMany(
       { vehicleSaleId: vehicleId, _id: { $ne: inquiryId }, status: 'PENDING' },
       { 
@@ -103,7 +112,13 @@ exports.finalizeSale = async (req, res) => {
         } 
       }
     );
-    // NOTE: Send Reject Emails here
+
+    // Send Reject Emails
+    for (const inq of pendingInquiries) {
+      if (inq.customerId && inq.customerId.email) {
+        sendSaleRejectedEmail(inq.customerId, vehicle);
+      }
+    }
 
     res.json({ message: 'Sale finalized successfully!' });
   } catch (error) {
@@ -130,6 +145,22 @@ exports.getTrendingVehicles = async (req, res) => {
     }));
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Admin Delete Inquiry
+exports.deleteInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inquiry = await Inquiry.findByIdAndDelete(id);
+    
+    if (!inquiry) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
+    
+    res.json({ message: 'Inquiry deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

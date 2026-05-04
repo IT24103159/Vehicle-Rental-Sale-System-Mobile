@@ -62,8 +62,15 @@ exports.createRentVehicle = async (req, res) => {
 
 exports.updateRentVehicle = async (req, res) => {
   try {
+    let existingImages = req.body.existingImages || [];
+    if (!Array.isArray(existingImages)) existingImages = [existingImages];
+    
+    const newImageUrls = req.files ? req.files.map(file => file.path) : [];
+    const finalImages = [...existingImages, ...newImageUrls];
+
     const data = {
       ...req.body,
+      images: finalImages,
       year: req.body.year ? Number(req.body.year) : undefined,
       dailyRate: req.body.dailyRate ? Number(req.body.dailyRate) : undefined,
       mileageLimit: req.body.mileageLimit ? Number(req.body.mileageLimit) : undefined,
@@ -122,11 +129,13 @@ exports.getSaleVehicleById = async (req, res) => {
 exports.createSaleVehicle = async (req, res) => {
   try {
     // Extract Cloudinary URLs from uploaded files
-    const imageUrls = req.files ? req.files.map(file => file.path) : [];
+    const imageUrls = req.files && req.files['images'] ? req.files['images'].map(file => file.path) : [];
+    const scanReportUrl = req.files && req.files['scanReport'] ? req.files['scanReport'][0].path : null;
 
     const data = {
       ...req.body,
       images: imageUrls,
+      scanReportUrl: scanReportUrl,
       price: Number(req.body.price),
       yom: req.body.yom ? Number(req.body.yom) : undefined,
       yearReg: req.body.yearReg ? Number(req.body.yearReg) : undefined,
@@ -144,8 +153,21 @@ exports.createSaleVehicle = async (req, res) => {
 
 exports.updateSaleVehicle = async (req, res) => {
   try {
+    let existingImages = req.body.existingImages || [];
+    if (!Array.isArray(existingImages)) existingImages = [existingImages];
+    
+    const newImageUrls = req.files && req.files['images'] ? req.files['images'].map(file => file.path) : [];
+    const finalImages = [...existingImages, ...newImageUrls];
+
+    let scanReportUrl = req.body.scanReportUrl; // If existing report is kept
+    if (req.files && req.files['scanReport']) {
+      scanReportUrl = req.files['scanReport'][0].path;
+    }
+
     const data = {
       ...req.body,
+      images: finalImages,
+      scanReportUrl: scanReportUrl,
       price: req.body.price ? Number(req.body.price) : undefined,
       yom: req.body.yom ? Number(req.body.yom) : undefined,
       yearReg: req.body.yearReg ? Number(req.body.yearReg) : undefined,

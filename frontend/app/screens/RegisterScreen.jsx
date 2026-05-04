@@ -37,6 +37,27 @@ const RegisterScreen = ({ navigation }) => {
       setErrorMsg('Please fill in all required fields marked with *');
       return;
     }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMsg('Please enter a valid email address');
+      return;
+    }
+
+    // Phone number validation (exactly 10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      setErrorMsg('Phone number must be exactly 10 digits (e.g., 0771234567)');
+      return;
+    }
+
+    // Password length validation (at least 6 characters)
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMsg('Passwords do not match!');
       return;
@@ -107,7 +128,14 @@ const RegisterScreen = ({ navigation }) => {
               </View>
               <View style={[styles.inputWrap, { marginLeft: 15 }]}>
                 <Text style={styles.label}>Phone Number *</Text>
-                <TextInput style={styles.input} placeholder="0771234567" keyboardType="phone-pad" value={formData.phone} onChangeText={(v) => updateField('phone', v)} />
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="0771234567" 
+                  keyboardType="phone-pad" 
+                  maxLength={10}
+                  value={formData.phone} 
+                  onChangeText={(v) => updateField('phone', v)} 
+                />
               </View>
             </View>
 

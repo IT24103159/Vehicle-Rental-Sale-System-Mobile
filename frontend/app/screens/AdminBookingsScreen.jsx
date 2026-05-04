@@ -45,26 +45,38 @@ const AdminBookingsScreen = ({ navigation }) => {
   };
 
   const handleDelete = (id) => {
-    Alert.alert(
-      'Confirm Delete',
-      'Are you sure you want to delete this booking record?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/bookings/admin/${id}`);
-              setBookings(bookings.filter(b => b._id !== id));
-              Alert.alert('Deleted', 'Booking record has been removed.');
-            } catch (err) {
-              Alert.alert('Error', 'Failed to delete booking');
-            }
-          }
+    const confirmDelete = async () => {
+      try {
+        await api.delete(`/bookings/admin/${id}`);
+        setBookings(bookings.filter(b => b._id !== id));
+        if (Platform.OS === 'web') {
+          window.alert('Booking record has been removed.');
+        } else {
+          Alert.alert('Deleted', 'Booking record has been removed.');
         }
-      ]
-    );
+      } catch (err) {
+        if (Platform.OS === 'web') {
+          window.alert('Failed to delete booking');
+        } else {
+          Alert.alert('Error', 'Failed to delete booking');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this booking record?')) {
+        confirmDelete();
+      }
+    } else {
+      Alert.alert(
+        'Confirm Delete',
+        'Are you sure you want to delete this booking record?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: confirmDelete }
+        ]
+      );
+    }
   };
 
   const getStatusColor = (status) => {

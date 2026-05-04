@@ -14,7 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
 
 const PaymentHistoryScreen = ({ navigation }) => {
-  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -26,8 +26,8 @@ const PaymentHistoryScreen = ({ navigation }) => {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/bookings/my-bookings');
-      setBookings(response.data);
+      const response = await api.get('/payments/my-payments');
+      setPayments(response.data);
     } catch (error) {
       console.error('Fetch history error:', error);
       Alert.alert('Error', 'Failed to load your payment history.');
@@ -38,9 +38,9 @@ const PaymentHistoryScreen = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Confirmed': return '#2e7d32'; // Green
-      case 'Pending Payment': return '#f57c00'; // Orange
-      case 'Cancelled': return '#d32f2f'; // Red
+      case 'Approved': return '#2e7d32'; // Green
+      case 'Pending': return '#f57c00'; // Orange
+      case 'Rejected': return '#d32f2f'; // Red
       default: return '#666';
     }
   };
@@ -60,40 +60,46 @@ const PaymentHistoryScreen = ({ navigation }) => {
         <View style={styles.center}><ActivityIndicator size="large" color="#c9a052" /></View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {bookings.length === 0 ? (
+          {payments.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={{ fontSize: 40, marginBottom: 10 }}>🧾</Text>
-              <Text style={styles.emptyTxt}>You haven't made any bookings yet.</Text>
+              <Text style={styles.emptyTxt}>No payment records found.</Text>
             </View>
           ) : (
-            bookings.map((b) => (
-              <View key={b._id} style={styles.card}>
+            payments.map((p) => (
+              <View key={p._id} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.bookingId}>Booking #{b._id.substring(b._id.length - 6).toUpperCase()}</Text>
-                  <View style={[styles.statusPill, { backgroundColor: getStatusColor(b.bookingStatus) + '20', borderColor: getStatusColor(b.bookingStatus) }]}>
-                    <Text style={[styles.statusTxt, { color: getStatusColor(b.bookingStatus) }]}>{b.bookingStatus}</Text>
+                  <Text style={styles.bookingId}>Booking #{p.bookingId?._id?.substring(p.bookingId._id.length - 6).toUpperCase()}</Text>
+                  <View style={[styles.statusPill, { backgroundColor: getStatusColor(p.status) + '20', borderColor: getStatusColor(p.status) }]}>
+                    <Text style={[styles.statusTxt, { color: getStatusColor(p.status) }]}>{p.status}</Text>
                   </View>
                 </View>
                 
                 <View style={styles.cardBody}>
-                  <Text style={styles.vehicleName}>🚙 {b.vehicleRentId?.name || 'Unknown Vehicle'}</Text>
+                  <Text style={styles.vehicleName}>🚙 {p.bookingId?.vehicleRentId?.name || 'Vehicle Rental'}</Text>
                   <View style={styles.dateRow}>
-                    <Text style={styles.dateTxt}>📅 Pick-up: {new Date(b.startDate).toLocaleDateString()}</Text>
-                    <Text style={styles.dateTxt}>📅 Return: {new Date(b.endDate).toLocaleDateString()}</Text>
+                    <Text style={styles.dateTxt}>📅 Paid On: {new Date(p.paymentDate).toLocaleDateString()}</Text>
                   </View>
-                  <Text style={styles.priceTxt}>Total Paid: Rs. {b.totalCost?.toLocaleString()}</Text>
+                  <Text style={styles.priceTxt}>Amount Paid: Rs. {p.amount?.toLocaleString()}</Text>
+                  
+                  {p.remarks ? (
+                    <View style={styles.remarksBox}>
+                      <Text style={styles.remarksLabel}>Admin Remarks:</Text>
+                      <Text style={styles.remarksTxt}>{p.remarks}</Text>
+                    </View>
+                  ) : null}
                 </View>
 
-                {b.bookingStatus === 'Pending Payment' && (
+                {p.status === 'Rejected' && (
                   <TouchableOpacity 
                     style={styles.payBtn}
                     onPress={() => navigation.navigate('Payment', { 
-                      bookingId: b._id, 
-                      totalCost: b.totalCost, 
-                      vehicleName: b.vehicleRentId?.name 
+                      bookingId: p.bookingId?._id, 
+                      totalCost: p.amount, 
+                      vehicleName: p.bookingId?.vehicleRentId?.name 
                     })}
                   >
-                    <Text style={styles.payBtnTxt}>Complete Payment Now</Text>
+                    <Text style={styles.payBtnTxt}>Re-upload Correct Slip</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -133,6 +139,10 @@ const styles = StyleSheet.create({
 
   emptyState: { alignItems: 'center', marginTop: 50 },
   emptyTxt: { color: '#888', fontSize: 14 },
+
+  remarksBox: { marginTop: 10, padding: 10, backgroundColor: '#fff5f5', borderRadius: 8, borderWidth: 1, borderColor: '#fed7d7' },
+  remarksLabel: { fontSize: 11, fontWeight: 'bold', color: '#c53030', marginBottom: 2 },
+  remarksTxt: { fontSize: 12, color: '#742a2a', fontStyle: 'italic' },
 });
 
 export default PaymentHistoryScreen;

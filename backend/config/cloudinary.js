@@ -10,10 +10,28 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'itp_kandy_vehicles',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
-    transformation: [{ width: 800, height: 600, crop: 'limit' }] // Optimize image size
+  params: async (req, file) => {
+    let folderName = 'itp_kandy_vehicles';
+    
+    if (file.fieldname === 'bankSlip') {
+      folderName = 'itp_kandy_payment_slips';
+    } else if (file.mimetype === 'application/pdf') {
+      folderName = 'itp_kandy_vehicles_reports';
+    }
+
+    if (file.mimetype === 'application/pdf') {
+      return {
+        folder: folderName,
+        allowed_formats: ['pdf'],
+        resource_type: 'raw' // Required for PDFs to avoid 401 Unauthorized
+      };
+    }
+    
+    return {
+      folder: folderName,
+      allowed_formats: ['jpg', 'png', 'jpeg'],
+      transformation: [{ width: 800, height: 600, crop: 'limit' }]
+    };
   },
 });
 

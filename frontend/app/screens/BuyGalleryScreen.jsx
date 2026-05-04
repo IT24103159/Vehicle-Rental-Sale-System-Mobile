@@ -11,6 +11,7 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import api from '../../services/api';
 import SearchBar from '../components/SearchBar';
@@ -40,8 +41,9 @@ const BuyGalleryScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const res = await api.get('/vehicles/sale');
-      setVehicles(res.data);
-      setFilteredVehicles(res.data);
+      const availableVehicles = res.data.filter(v => v.status !== 'Sold');
+      setVehicles(availableVehicles);
+      setFilteredVehicles(availableVehicles);
     } catch (err) {
       console.log(err);
     } finally {
@@ -62,6 +64,25 @@ const BuyGalleryScreen = ({ navigation }) => {
   };
 
   const applyFilters = () => {
+    // Validation for negative values
+    if (maxMileage && parseFloat(maxMileage) < 0) {
+      if (Platform.OS === 'web') {
+        window.alert('Invalid Mileage: Max mileage cannot be negative.');
+      } else {
+        Alert.alert('Invalid Mileage', 'Max mileage cannot be negative.');
+      }
+      return;
+    }
+
+    if (maxPrice && parseFloat(maxPrice) < 0) {
+      if (Platform.OS === 'web') {
+        window.alert('Invalid Price: Max price cannot be negative.');
+      } else {
+        Alert.alert('Invalid Price', 'Max price cannot be negative.');
+      }
+      return;
+    }
+
     let temp = [...vehicles];
 
     if (searchQuery) {
@@ -80,7 +101,7 @@ const BuyGalleryScreen = ({ navigation }) => {
     if (maxPrice) temp = temp.filter(v => v.price <= parseFloat(maxPrice));
 
     setFilteredVehicles(temp);
-    setShowFilters(false); // Hide filters after applying
+    setShowFilters(false);
   };
 
   const resetFilters = () => {

@@ -8,12 +8,15 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
+  Modal,
 } from 'react-native';
 import api from '../../services/api';
 
 const CustomerNotificationsScreen = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -71,6 +74,11 @@ const CustomerNotificationsScreen = ({ navigation }) => {
               </View>
               <View style={styles.contentBox}>
                 <Text style={styles.typeTxt}>{n.type}</Text>
+                {n.imageUrl && (
+                  <TouchableOpacity onPress={() => setSelectedImage(n.imageUrl)}>
+                    <Image source={{ uri: n.imageUrl }} style={styles.notificationImg} />
+                  </TouchableOpacity>
+                )}
                 <Text style={[styles.msgTxt, !n.isRead && { fontWeight: 'bold', color: '#111318' }]}>{n.message}</Text>
                 <Text style={styles.timeTxt}>{new Date(n.createdAt).toLocaleDateString()} {new Date(n.createdAt).toLocaleTimeString()}</Text>
               </View>
@@ -79,6 +87,26 @@ const CustomerNotificationsScreen = ({ navigation }) => {
           ))
         )}
       </ScrollView>
+
+      {/* Full Screen Image Modal */}
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setSelectedImage(null)}
+          >
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedImage(null)}>
+              <Text style={styles.closeBtnTxt}>✕ Close</Text>
+            </TouchableOpacity>
+            <Image 
+              source={{ uri: selectedImage }} 
+              style={styles.fullImage} 
+              resizeMode="contain" 
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -100,11 +128,19 @@ const styles = StyleSheet.create({
   typeTxt: { fontSize: 11, color: '#c9a052', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
   msgTxt: { fontSize: 14, color: '#555', lineHeight: 20 },
   timeTxt: { fontSize: 11, color: '#888', marginTop: 5 },
+  notificationImg: { width: '100%', height: 120, borderRadius: 8, marginVertical: 8, resizeMode: 'cover' },
   
   dot: { width: 10, height: 10, backgroundColor: '#c9a052', borderRadius: 5, marginLeft: 10 },
 
   emptyState: { alignItems: 'center', marginTop: 50 },
   emptyTxt: { color: '#888', fontSize: 14 },
+
+  // Modal Styles
+  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
+  modalOverlay: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  fullImage: { width: '95%', height: '80%' },
+  closeBtn: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20 },
+  closeBtnTxt: { color: '#fff', fontWeight: 'bold' },
 });
 
 export default CustomerNotificationsScreen;

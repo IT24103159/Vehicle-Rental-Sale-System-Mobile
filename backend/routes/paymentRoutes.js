@@ -5,11 +5,13 @@ const { uploadSlip } = require('../middleware/uploadMiddleware');
 const {
   uploadPayment,
   getAllPayments,
-  updatePaymentStatus
+  updatePaymentStatus,
+  getMyPayments
 } = require('../controllers/paymentController');
 
-// Customer uploads payment
+// Customer routes
 router.post('/upload', protect, uploadSlip.single('bankSlip'), uploadPayment);
+router.get('/my-payments', protect, getMyPayments);
 
 // Admin gets all payments
 router.get('/', protect, adminOnly, getAllPayments);

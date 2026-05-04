@@ -4,6 +4,7 @@ import {
   SafeAreaView, StatusBar, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image 
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import api from '../../services/api';
 
 const AddVehicleScreen = ({ route, navigation }) => {
@@ -14,11 +15,10 @@ const AddVehicleScreen = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState(isEditing ? editType : 'rent');
   const [loading, setLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState(vehicle.images || []);
-  const [imageUrl, setImageUrl] = useState(vehicle.images?.[0] || '');
+  const [scanReport, setScanReport] = useState(null);
 
   useEffect(() => {
     setSelectedImages([]);
-    setImageUrl('');
   }, [activeTab]);
 
   const pickImages = async () => {
@@ -32,14 +32,33 @@ const AddVehicleScreen = ({ route, navigation }) => {
     if (!result.canceled) {
       const newImages = [...selectedImages, ...result.assets.map(asset => asset.uri)].slice(0, 5);
       setSelectedImages(newImages);
-      if (newImages.length > 0) setImageUrl(newImages[0]);
     }
   };
 
   const removeImage = (index) => {
     const newImages = selectedImages.filter((_, i) => i !== index);
     setSelectedImages(newImages);
-    setImageUrl(newImages[0] || '');
+  };
+
+  const pickScanReport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setScanReport(result.assets[0]);
+      }
+    } catch (error) {
+      console.log('Error picking document', error);
+      Alert.alert("Error", "Could not pick PDF document.");
+    }
+  };
+
+  const removeScanReport = () => {
+    setScanReport(null);
+    setSaleData({ ...saleData, scanReportUrl: '' });
   };
 
   // Form States for Rent
@@ -86,8 +105,8 @@ const AddVehicleScreen = ({ route, navigation }) => {
       }
     }
 
-    if (!imageUrl) {
-      showAlert('Missing Image', 'Please provide a vehicle image URL.');
+    if (selectedImages.length === 0) {
+      showAlert('Missing Image', 'Please provide at least one vehicle image.');
       return false;
     }
 
@@ -145,6 +164,23 @@ const AddVehicleScreen = ({ route, navigation }) => {
               type
             });
           }
+        } else {
+          formData.append('existingImages', uri);
+        }
+      }
+
+      // Append Scan Report for Sale Vehicle
+      if (activeTab === 'sale' && scanReport) {
+        if (Platform.OS === 'web') {
+          const res = await fetch(scanReport.uri);
+          const blob = await res.blob();
+          formData.append('scanReport', blob, scanReport.name || 'report.pdf');
+        } else {
+          formData.append('scanReport', {
+            uri: Platform.OS === 'ios' ? scanReport.uri.replace('file://', '') : scanReport.uri,
+            name: scanReport.name || 'report.pdf',
+            type: scanReport.mimeType || 'application/pdf'
+          });
         }
       }
 
@@ -241,27 +277,14 @@ const AddVehicleScreen = ({ route, navigation }) => {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.card}>
             
-            {/* Image URL Section */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>VEHICLE IMAGE URL</Text>
-              <TextInput
-                style={styles.input}
-                value={imageUrl}
-                onChangeText={setImageUrl}
-                placeholder="Paste image link here (e.g. https://...)"
-              />
-            </View>
-
-            {imageUrl ? (
+            {selectedImages.length > 0 ? (
               <View style={styles.previewContainer}>
-                <Image source={{ uri: imageUrl }} style={styles.previewImg} />
-                <TouchableOpacity style={styles.clearImg} onPress={() => setImageUrl('')}>
-                  <Text style={styles.clearImgTxt}>Remove</Text>
-                </TouchableOpacity>
+                <Image source={{ uri: selectedImages[0] }} style={styles.previewImg} />
+                <Text style={styles.infoHint}>Main Image Preview</Text>
               </View>
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text style={styles.placeholderTxt}>No image preview available</Text>
+                <Text style={styles.placeholderTxt}>No images selected yet</Text>
               </View>
             )}
 
@@ -360,6 +383,23 @@ const AddVehicleScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
                   )}
                 </ScrollView>
+
+                {/* --- PDF UPLOAD UI --- */}
+                <Text style={[styles.sectionDivider, { marginTop: 10 }]}>DOCUMENTS</Text>
+                <Text style={styles.label}>VEHICLE HEALTH SCAN REPORT (PDF ONLY)</Text>
+                {scanReport || saleData.scanReportUrl ? (
+                  <View style={styles.pdfContainer}>
+                    <Text style={styles.pdfText}>📄 {scanReport ? scanReport.name : 'Existing Report'}</Text>
+                    <TouchableOpacity onPress={removeScanReport} style={styles.removePdfBtn}>
+                      <Text style={styles.removePdfTxt}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={styles.uploadPdfBtn} onPress={pickScanReport}>
+                    <Text style={styles.uploadPdfTxt}>+ Upload PDF Report</Text>
+                  </TouchableOpacity>
+                )}
+
               </View>
             )}
 
@@ -390,6 +430,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   backTxt: { color: '#888', marginRight: 15 },
   headerTitle: { fontSize: 16, fontWeight: 'bold' },
+  infoHint: { fontSize: 10, color: '#c9a052', marginTop: 5, textAlign: 'center' },
   sectionDivider: { fontSize: 11, fontWeight: 'bold', color: '#c9a052', marginBottom: 15, letterSpacing: 1 },
   
   tabContainer: { flexDirection: 'row', padding: 15, gap: 10 },
@@ -430,6 +471,14 @@ const styles = StyleSheet.create({
   removeImgTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   addImageBtn: { width: 100, height: 100, borderRadius: 12, borderStyle: 'dashed', borderWidth: 2, borderColor: '#ddd', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9f9f9' },
   addImageTxt: { fontSize: 30, color: '#aaa', marginBottom: 2 },
+
+  // PDF Styles
+  uploadPdfBtn: { backgroundColor: '#f8f9fa', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#ddd', borderStyle: 'dashed', alignItems: 'center', marginBottom: 15 },
+  uploadPdfTxt: { color: '#c9a052', fontWeight: 'bold', fontSize: 12 },
+  pdfContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8f9fa', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#eee' },
+  pdfText: { color: '#333', flex: 1, marginRight: 10, fontSize: 12 },
+  removePdfBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5 },
+  removePdfTxt: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
 });
 
 export default AddVehicleScreen;

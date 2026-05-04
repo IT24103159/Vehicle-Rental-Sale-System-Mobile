@@ -6,6 +6,7 @@ const promotionSchema = new mongoose.Schema({
   description: { type: String },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
+  imageUrl: { type: String, default: null },
   adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

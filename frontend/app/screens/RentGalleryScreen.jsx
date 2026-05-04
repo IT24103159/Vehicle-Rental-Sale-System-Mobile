@@ -61,6 +61,16 @@ const RentGalleryScreen = ({ navigation }) => {
   };
 
   const applyFilters = (query = searchQuery, activeFilters = filters) => {
+    // Validation for negative values
+    if (activeFilters.maxPrice && parseFloat(activeFilters.maxPrice) < 0) {
+      if (Platform.OS === 'web') {
+        window.alert('Invalid Price: Max price cannot be negative.');
+      } else {
+        Alert.alert('Invalid Price', 'Max price cannot be negative.');
+      }
+      return;
+    }
+
     let temp = [...vehicles];
 
     // Global Search
