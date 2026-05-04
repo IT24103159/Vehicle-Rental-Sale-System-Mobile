@@ -52,7 +52,7 @@ const AdminDashboard = ({ navigation }) => {
                   <Text style={styles.actionTitle}>{a.title}</Text>
                   <Text style={styles.actionDesc}>{a.desc}</Text>
                 </View>
-                <Text style={styles.chevron}>→</Text>
+
               </TouchableOpacity>
             ))}
           </View>

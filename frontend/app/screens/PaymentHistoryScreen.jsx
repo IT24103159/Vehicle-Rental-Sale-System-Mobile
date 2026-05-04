@@ -48,10 +48,10 @@ const PaymentHistoryScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnTxt}>← Dashboard</Text>
+          <Text style={styles.backBtnTxt}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Payment History</Text>
       </View>
@@ -74,14 +74,14 @@ const PaymentHistoryScreen = ({ navigation }) => {
                     <Text style={[styles.statusTxt, { color: getStatusColor(p.status) }]}>{p.status}</Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.cardBody}>
                   <Text style={styles.vehicleName}>🚙 {p.bookingId?.vehicleRentId?.name || 'Vehicle Rental'}</Text>
                   <View style={styles.dateRow}>
                     <Text style={styles.dateTxt}>📅 Paid On: {new Date(p.paymentDate).toLocaleDateString()}</Text>
                   </View>
                   <Text style={styles.priceTxt}>Amount Paid: Rs. {p.amount?.toLocaleString()}</Text>
-                  
+
                   {p.remarks ? (
                     <View style={styles.remarksBox}>
                       <Text style={styles.remarksLabel}>Admin Remarks:</Text>
@@ -91,12 +91,12 @@ const PaymentHistoryScreen = ({ navigation }) => {
                 </View>
 
                 {p.status === 'Rejected' && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.payBtn}
-                    onPress={() => navigation.navigate('Payment', { 
-                      bookingId: p.bookingId?._id, 
-                      totalCost: p.amount, 
-                      vehicleName: p.bookingId?.vehicleRentId?.name 
+                    onPress={() => navigation.navigate('Payment', {
+                      bookingId: p.bookingId?._id,
+                      totalCost: p.amount,
+                      vehicleName: p.bookingId?.vehicleRentId?.name
                     })}
                   >
                     <Text style={styles.payBtnTxt}>Re-upload Correct Slip</Text>
@@ -116,15 +116,15 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f0ebe0' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: 20, backgroundColor: '#f0ebe0', flexDirection: 'row', alignItems: 'center' },
-  backBtnTxt: { color: '#c9a052', fontWeight: 'bold', fontSize: 14 },
+  backBtnTxt: { color: '#000000', fontWeight: 'bold', fontSize: 14 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: '#111318', marginRight: 40 },
 
   scrollContent: { padding: 20 },
-  
+
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 15, elevation: 2, borderWidth: 1, borderColor: '#eee' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 10 },
   bookingId: { fontSize: 12, fontWeight: 'bold', color: '#888' },
-  
+
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
   statusTxt: { fontSize: 10, fontWeight: 'bold' },
 

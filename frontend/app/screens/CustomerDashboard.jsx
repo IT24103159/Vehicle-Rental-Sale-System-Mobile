@@ -44,7 +44,7 @@ const CustomerDashboard = ({ navigation }) => {
                   <Text style={styles.menuTitle}>{item.title}</Text>
                   <Text style={styles.menuDesc}>{item.desc}</Text>
                 </View>
-                <Text style={styles.menuArrow}>→</Text>
+
               </TouchableOpacity>
             ))}
           </View>

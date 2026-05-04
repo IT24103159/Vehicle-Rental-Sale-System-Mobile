@@ -43,7 +43,7 @@ const RentalHistoryScreen = ({ navigation }) => {
         api.get('/bookings/my-bookings'),
         api.get('/reviews/my-reviews') // We need to add this endpoint or filter manually
       ]);
-      
+
       const confirmedBookings = bookingsRes.data.filter(b => b.bookingStatus === 'Confirmed');
       setBookings(confirmedBookings);
       setUserReviews(reviewsRes.data || []);
@@ -125,10 +125,10 @@ const RentalHistoryScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnTxt}>← Dashboard</Text>
+          <Text style={styles.backBtnTxt}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Rental History</Text>
       </View>
@@ -153,7 +153,7 @@ const RentalHistoryScreen = ({ navigation }) => {
                       <Text style={styles.statusTxt}>COMPLETED</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.cardBody}>
                     <Text style={styles.vehicleName}>🚙 {b.vehicleRentId?.name || 'Unknown Vehicle'}</Text>
                     <View style={styles.dateRow}>
@@ -179,7 +179,7 @@ const RentalHistoryScreen = ({ navigation }) => {
                         </View>
                       </View>
                     ) : (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.reviewBtn}
                         onPress={() => openAddReviewModal(b.vehicleRentId?._id)}
                       >
@@ -240,15 +240,15 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f0ebe0' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: 20, backgroundColor: '#f0ebe0', flexDirection: 'row', alignItems: 'center' },
-  backBtnTxt: { color: '#c9a052', fontWeight: 'bold', fontSize: 14 },
+  backBtnTxt: { color: '#010101', fontWeight: 'bold', fontSize: 14 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: '#111318', marginRight: 40 },
 
   scrollContent: { padding: 20 },
-  
+
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 15, elevation: 2, borderWidth: 1, borderColor: '#eee' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 10 },
   bookingId: { fontSize: 12, fontWeight: 'bold', color: '#888' },
-  
+
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#c8e6c9' },
   statusTxt: { fontSize: 10, fontWeight: 'bold', color: '#2e7d32' },
 
@@ -268,14 +268,14 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 25 },
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#111318', marginBottom: 5 },
   modalSub: { fontSize: 13, color: '#666', marginBottom: 20 },
-  
+
   starsRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10 },
   starIcon: { fontSize: 40 },
   starSelected: { color: '#FFD700' },
   starUnselected: { color: '#e0e0e0' },
-  
+
   commentInput: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee', borderRadius: 10, padding: 15, height: 100, textAlignVertical: 'top', fontSize: 14, marginBottom: 20 },
-  
+
   modalActions: { flexDirection: 'row', gap: 10 },
   cancelBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#f0f0f0' },
   cancelBtnTxt: { color: '#333', fontWeight: 'bold' },

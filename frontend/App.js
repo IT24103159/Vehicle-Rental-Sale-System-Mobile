@@ -31,6 +31,7 @@ import AccountScreen from './app/screens/AccountScreen';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -137,17 +138,21 @@ const Navigation = () => {
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#c9a052',
-          tabBarInactiveTintColor: '#888',
+          tabBarActiveTintColor: '#111318',
+          tabBarInactiveTintColor: '#8890a6',
           tabBarStyle: { 
             backgroundColor: '#fff', 
-            borderTopColor: '#e0e0e0',
-            height: 60,
-            paddingBottom: 8,
-            paddingTop: 8,
-            elevation: 5,
+            borderTopColor: '#f0f0f0',
+            height: 70,
+            paddingBottom: 12,
+            paddingTop: 10,
+            elevation: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 10,
           },
-          tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold' }
+          tabBarLabelStyle: { fontSize: 11, fontWeight: 'bold', marginTop: 4 }
         }}
       >
         <Tab.Screen 
@@ -155,15 +160,29 @@ const Navigation = () => {
           component={HomeStack} 
           options={{ 
             tabBarLabel: 'Home', 
-            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>🏠</Text> 
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+            )
           }} 
         />
         <Tab.Screen 
           name="DashboardTab" 
           component={DashboardStack} 
           options={{ 
-            tabBarLabel: 'Dashboard', 
-            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>🎛️</Text> 
+            tabBarLabel: 'Activities', 
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'list' : 'list-outline'} size={24} color={color} />
+            )
+          }} 
+        />
+        <Tab.Screen 
+          name="NotificationTab" 
+          component={CustomerNotificationsScreen} 
+          options={{ 
+            tabBarLabel: 'Notification', 
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={24} color={color} />
+            )
           }} 
         />
         <Tab.Screen 
@@ -171,7 +190,9 @@ const Navigation = () => {
           component={AccountStack} 
           options={{ 
             tabBarLabel: 'Account', 
-            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>👤</Text> 
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={26} color={color} />
+            )
           }} 
         />
       </Tab.Navigator>
