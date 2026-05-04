@@ -47,3 +47,54 @@ exports.getVehicleReviews = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.updateReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stars, comment } = req.body;
+
+    const review = await Review.findById(id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    // Check ownership
+    if (review.customerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized to edit this review' });
+    }
+
+    review.stars = stars;
+    review.comment = comment;
+    await review.save();
+    
+    await review.populate('customerId', 'fullName');
+    res.json(review);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    // Check ownership
+    if (review.customerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized to delete this review' });
+    }
+
+    await Review.findByIdAndDelete(id);
+    res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getMyReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ customerId: req.user._id });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

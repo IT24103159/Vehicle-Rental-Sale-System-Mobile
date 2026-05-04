@@ -1,19 +1,9 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
+import React, { useState, useEffect } from 'react';
+import { 
+  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, 
+  SafeAreaView, StatusBar, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image 
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import api from '../../services/api';
 
 const AddVehicleScreen = ({ route, navigation }) => {
@@ -23,7 +13,34 @@ const AddVehicleScreen = ({ route, navigation }) => {
 
   const [activeTab, setActiveTab] = useState(isEditing ? editType : 'rent');
   const [loading, setLoading] = useState(false);
+  const [selectedImages, setSelectedImages] = useState(vehicle.images || []);
   const [imageUrl, setImageUrl] = useState(vehicle.images?.[0] || '');
+
+  useEffect(() => {
+    setSelectedImages([]);
+    setImageUrl('');
+  }, [activeTab]);
+
+  const pickImages = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.7,
+      selectionLimit: 5,
+    });
+
+    if (!result.canceled) {
+      const newImages = [...selectedImages, ...result.assets.map(asset => asset.uri)].slice(0, 5);
+      setSelectedImages(newImages);
+      if (newImages.length > 0) setImageUrl(newImages[0]);
+    }
+  };
+
+  const removeImage = (index) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    setSelectedImages(newImages);
+    setImageUrl(newImages[0] || '');
+  };
 
   // Form States for Rent
   const [rentData, setRentData] = useState({
@@ -45,21 +62,44 @@ const AddVehicleScreen = ({ route, navigation }) => {
     scanReportUrl: vehicle.scanReportUrl || '', description: vehicle.description || ''
   });
 
+  const showAlert = (title, msg) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${msg}`);
+    } else {
+      Alert.alert(title, msg);
+    }
+  };
+
   const validateForm = (data) => {
+    // Required fields for Rent
+    const rentRequired = ['name', 'type', 'year', 'dailyRate', 'mileageLimit', 'extraMileageCharge', 'seats', 'avgFuelEfficiency', 'description'];
+    // Required fields for Sale
+    const saleRequired = ['name', 'brand', 'price', 'yom', 'yearReg', 'bodyType', 'mileage', 'color', 'engineCap', 'description'];
+
+    const fieldsToCheck = activeTab === 'rent' ? rentRequired : saleRequired;
+
+    for (const field of fieldsToCheck) {
+      if (data[field] === undefined || data[field] === null || data[field].toString().trim() === '') {
+        const fieldLabel = field.replace(/([A-Z])/g, ' $1').toUpperCase();
+        showAlert('Missing Field', `Please enter the ${fieldLabel}.`);
+        return false;
+      }
+    }
+
+    if (!imageUrl) {
+      showAlert('Missing Image', 'Please provide a vehicle image URL.');
+      return false;
+    }
+
     const numericFields = activeTab === 'rent' 
       ? ['year', 'dailyRate', 'mileageLimit', 'extraMileageCharge', 'seats']
       : ['yom', 'yearReg', 'price', 'mileage'];
 
     for (const field of numericFields) {
-      if (data[field] && Number(data[field]) < 0) {
-        Alert.alert('Validation Error', `${field.toUpperCase()} cannot be a negative value.`);
+      if (data[field] !== '' && (isNaN(Number(data[field])) || Number(data[field]) < 0)) {
+        showAlert('Invalid Value', `${field.toUpperCase()} must be a valid positive number.`);
         return false;
       }
-    }
-
-    if (!data.name) {
-      Alert.alert('Validation Error', 'Vehicle Name is required.');
-      return false;
     }
 
     return true;
@@ -68,35 +108,74 @@ const AddVehicleScreen = ({ route, navigation }) => {
   const handleSave = async () => {
     const data = activeTab === 'rent' ? rentData : saleData;
 
+    console.log('--- ATTEMPTING TO SAVE ---');
+    console.log('Active Tab:', activeTab);
     if (!validateForm(data)) return;
 
     try {
       setLoading(true);
       const endpoint = activeTab === 'rent' ? '/vehicles/rent' : '/vehicles/sale';
-      const fullEndpoint = isEditing ? `${endpoint}/${vehicle._id}` : endpoint;
+      const payload = activeTab === 'rent' ? rentData : saleData;
+
+      // Use FormData for image upload
+      const formData = new FormData();
       
-      const payload = { 
-        ...data, 
-        images: imageUrl ? [imageUrl] : [] 
+      // Append all text fields
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== undefined && payload[key] !== null) {
+          formData.append(key, payload[key]);
+        }
+      });
+
+      // Append Images
+      for (const [index, uri] of selectedImages.entries()) {
+        if (!uri.startsWith('http')) { // Only upload new local images
+          if (Platform.OS === 'web') {
+            const res = await fetch(uri);
+            const blob = await res.blob();
+            formData.append('images', blob, `upload_${index}.jpg`);
+          } else {
+            const filename = uri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : `image/jpeg`;
+            
+            formData.append('images', {
+              uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+              name: filename,
+              type
+            });
+          }
+        }
+      }
+
+      const config = {
+        headers: { 'Content-Type': 'multipart/form-data' }
       };
-      
-      console.log('--- Sending to Backend ---');
-      console.log('Endpoint:', fullEndpoint);
-      console.log('Payload:', payload);
 
       if (isEditing) {
-        await api.put(fullEndpoint, payload);
+        await api.put(`${endpoint}/${vehicle._id}`, formData, config);
       } else {
-        await api.post(fullEndpoint, payload);
+        await api.post(endpoint, formData, config);
       }
-      
-      // Navigate back immediately and show alert to prevent double clicks
-      navigation.goBack();
-      Alert.alert('Success', `Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`);
+
+      setLoading(false);
+      if (Platform.OS === 'web') {
+        window.alert(`Success: Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`);
+        navigation.navigate('DashboardTab', { screen: 'AdminHome' });
+      } else {
+        Alert.alert('Success', `Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`, [
+          { text: 'OK', onPress: () => navigation.navigate('DashboardTab', { screen: 'AdminHome' }) }
+        ]);
+      }
       
     } catch (error) {
       setLoading(false);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to save vehicle');
+      console.error('Save Error:', error.response?.data || error.message);
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + (error.response?.data?.message || 'Failed to save vehicle'));
+      } else {
+        Alert.alert('Error', error.response?.data?.message || 'Failed to save vehicle');
+      }
     }
   };
 
@@ -209,25 +288,78 @@ const AddVehicleScreen = ({ route, navigation }) => {
                   {renderInput('FUEL EFFICIENCY', rentData.avgFuelEfficiency, (t) => setRentData({...rentData, avgFuelEfficiency: t}), '15', 'default', true)}
                   {renderDropdown('STATUS', rentData.status, ['Available', 'Reserved', 'Rented'], (v) => setRentData({...rentData, status: v}), true)}
                 </View>
+
+                {/* --- IMAGE PICKER UI --- */}
+                <Text style={styles.label}>VEHICLE IMAGES (MAX 5)</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
+                  {selectedImages.map((uri, index) => (
+                    <View key={index} style={styles.imageWrapper}>
+                      <Image source={{ uri }} style={styles.previewImg} />
+                      <TouchableOpacity style={styles.removeImgBtn} onPress={() => removeImage(index)}>
+                        <Text style={styles.removeImgTxt}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {selectedImages.length < 5 && (
+                    <TouchableOpacity style={styles.addImageBtn} onPress={pickImages}>
+                      <Text style={styles.addImageTxt}>+</Text>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Add Photo</Text>
+                    </TouchableOpacity>
+                  )}
+                </ScrollView>
               </View>
             ) : (
               <View>
+                <Text style={styles.sectionDivider}>BASIC INFORMATION</Text>
                 <View style={styles.row}>
-                  {renderInput('NAME', saleData.name, (t) => setSaleData({...saleData, name: t}), 'e.g. Premio', 'default', true)}
-                  {renderInput('BRAND', saleData.brand, (t) => setSaleData({...saleData, brand: t}), 'Toyota', 'default', true)}
+                  {renderInput('VEHICLE NAME', saleData.name, (t) => setSaleData({...saleData, name: t}), 'e.g. Civic', 'default', true)}
+                  {renderInput('BRAND', saleData.brand, (t) => setSaleData({...saleData, brand: t}), 'e.g. Honda', 'default', true)}
                 </View>
                 <View style={styles.row}>
-                  {renderInput('PRICE (RS.)', saleData.price, (t) => setSaleData({...saleData, price: t}), '8500000', 'numeric', true)}
+                  {renderDropdown('CONDITION', saleData.conditionStatus, ['Brand New', 'Registered', 'Reconditioned'], (v) => setSaleData({...saleData, conditionStatus: v}), true)}
+                  {renderDropdown('TRANSMISSION', saleData.transmission, ['Auto', 'Manual', 'Tiptronic'], (v) => setSaleData({...saleData, transmission: v}), true)}
+                </View>
+
+                <Text style={[styles.sectionDivider, { marginTop: 20 }]}>TECHNICAL SPECS</Text>
+                <View style={styles.row}>
                   {renderInput('YOM', saleData.yom, (t) => setSaleData({...saleData, yom: t}), '2020', 'numeric', true)}
+                  {renderInput('REG YEAR', saleData.yearReg, (t) => setSaleData({...saleData, yearReg: t}), '2021', 'numeric', true)}
                 </View>
                 <View style={styles.row}>
-                  {renderDropdown('TRANSMISSION', saleData.transmission, ['Auto', 'Manual'], (v) => setSaleData({...saleData, transmission: v}), true)}
-                  {renderDropdown('CONDITION', saleData.conditionStatus, ['Used', 'New', 'Recon'], (v) => setSaleData({...saleData, conditionStatus: v}), true)}
+                  {renderInput('BODY TYPE', saleData.bodyType, (t) => setSaleData({...saleData, bodyType: t}), 'SUV / Sedan', 'default', true)}
+                  {renderInput('COLOR', saleData.color, (t) => setSaleData({...saleData, color: t}), 'White / Black', 'default', true)}
                 </View>
                 <View style={styles.row}>
-                  {renderInput('MILEAGE (KM)', saleData.mileage, (t) => setSaleData({...saleData, mileage: t}), '0', 'numeric', true)}
+                  {renderInput('MILEAGE (KM)', saleData.mileage, (t) => setSaleData({...saleData, mileage: t}), '15000', 'numeric', true)}
+                  {renderInput('ENGINE CAPACITY', saleData.engineCap, (t) => setSaleData({...saleData, engineCap: t}), 'e.g. 1500cc', 'default', true)}
+                </View>
+                <View style={styles.row}>
                   {renderDropdown('STATUS', saleData.status, ['Available', 'Sold'], (v) => setSaleData({...saleData, status: v}), true)}
                 </View>
+
+                <Text style={[styles.sectionDivider, { marginTop: 20 }]}>PRICING & MEDIA</Text>
+                <View style={styles.row}>
+                  {renderInput('PRICE (RS.)', saleData.price, (t) => setSaleData({...saleData, price: t}), '8500000', 'numeric', true)}
+                </View>
+
+                {/* --- IMAGE PICKER UI --- */}
+                <Text style={styles.label}>VEHICLE IMAGES (MAX 5)</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
+                  {selectedImages.map((uri, index) => (
+                    <View key={index} style={styles.imageWrapper}>
+                      <Image source={{ uri }} style={styles.previewImg} />
+                      <TouchableOpacity style={styles.removeImgBtn} onPress={() => removeImage(index)}>
+                        <Text style={styles.removeImgTxt}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {selectedImages.length < 5 && (
+                    <TouchableOpacity style={styles.addImageBtn} onPress={pickImages}>
+                      <Text style={styles.addImageTxt}>+</Text>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Add Photo</Text>
+                    </TouchableOpacity>
+                  )}
+                </ScrollView>
               </View>
             )}
 
@@ -258,6 +390,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   backTxt: { color: '#888', marginRight: 15 },
   headerTitle: { fontSize: 16, fontWeight: 'bold' },
+  sectionDivider: { fontSize: 11, fontWeight: 'bold', color: '#c9a052', marginBottom: 15, letterSpacing: 1 },
   
   tabContainer: { flexDirection: 'row', padding: 15, gap: 10 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: '#ddd' },
@@ -287,7 +420,16 @@ const styles = StyleSheet.create({
   optBtnTxtActive: { color: '#fff' },
 
   saveBtn: { backgroundColor: '#111318', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  saveBtnTxt: { color: '#fff', fontWeight: 'bold' },
+  saveBtnTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  
+  // Image Picker Styles
+  imageScroll: { flexDirection: 'row', marginTop: 10, marginBottom: 20 },
+  imageWrapper: { marginRight: 15, position: 'relative' },
+  previewImg: { width: 100, height: 100, borderRadius: 12, backgroundColor: '#eee' },
+  removeImgBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: '#ef4444', width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center', elevation: 2 },
+  removeImgTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  addImageBtn: { width: 100, height: 100, borderRadius: 12, borderStyle: 'dashed', borderWidth: 2, borderColor: '#ddd', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9f9f9' },
+  addImageTxt: { fontSize: 30, color: '#aaa', marginBottom: 2 },
 });
 
 export default AddVehicleScreen;

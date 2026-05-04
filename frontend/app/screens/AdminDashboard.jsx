@@ -18,13 +18,6 @@ const { width } = Dimensions.get('window');
 const AdminDashboard = ({ navigation }) => {
   const { user } = useContext(AuthContext);
 
-  const metrics = [
-    { title: 'Total Users', value: '124', icon: '👥', trend: '+12%', trendUp: true },
-    { title: 'Total Vehicles', value: '48', icon: '🚗', trend: '+5%', trendUp: true },
-    { title: 'New Bookings', value: '18', icon: '📅', trend: '-2%', trendUp: false },
-    { title: 'Revenue', value: 'Rs. 450k', icon: '💰', trend: '+18%', trendUp: true },
-  ];
-
   const adminActions = [
     { title: 'Manage Users', icon: '👤', desc: 'View, edit and block users', screen: 'UserManagement' },
     { title: 'Add Vehicle', icon: '➕', desc: 'Add new rental or sale vehicle', screen: 'AddVehicle' },
@@ -32,38 +25,18 @@ const AdminDashboard = ({ navigation }) => {
     { title: 'Bookings', icon: '📋', desc: 'Review and approve bookings', screen: 'AdminBookings' },
     { title: 'Payments', icon: '💳', desc: 'Approve bank slip payments', screen: 'AdminPayments' },
     { title: 'Promotions', icon: '🎁', desc: 'Create & manage discount codes', screen: 'AdminPromotions' },
-    { title: 'Add Sale Vehicle', icon: '🏎️', desc: 'Add new vehicle for sale fleet', screen: 'AddSaleVehicle' },
     { title: 'Inquiries', icon: '✉️', desc: 'Reply to customer inquiries', screen: 'AdminInquiries' },
   ];
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      <CustomHeader title={`Welcome, ${user?.fullName || 'Admin'}`} showBack={false} showLogout={true} />
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <CustomHeader title={`Management Console`} showBack={false} />
 
-        {/* Metrics Grid */}
-        <View style={styles.metricsContainer}>
-          <View style={styles.grid}>
-            {metrics.map((m, i) => (
-              <View key={i} style={styles.metricCard}>
-                <View style={styles.metricHeader}>
-                  <Text style={styles.metricTitle}>{m.title}</Text>
-                  <Text style={{ fontSize: 18 }}>{m.icon}</Text>
-                </View>
-                <Text style={styles.metricValue}>{m.value}</Text>
-                <Text style={[styles.metricTrend, { color: m.trendUp ? '#2e7d32' : '#d32f2f' }]}>
-                  {m.trend} <Text style={{ color: '#8a94a8' }}>this month</Text>
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Admin Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Management Console</Text>
           <View style={styles.actionsGrid}>
             {adminActions.map((a, i) => (
               <TouchableOpacity

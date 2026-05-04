@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 const {
   getAllRentVehicles,
   getRentVehicleById,
@@ -21,14 +22,14 @@ router.get('/trending', getTrendingVehicles);
 // Rent Endpoints
 router.get('/rent', getAllRentVehicles);
 router.get('/rent/:id', getRentVehicleById);
-router.post('/rent', protect, adminOnly, createRentVehicle);
+router.post('/rent', protect, adminOnly, upload.array('images', 5), createRentVehicle);
 router.put('/rent/:id', protect, adminOnly, updateRentVehicle);
 router.delete('/rent/:id', protect, adminOnly, deleteRentVehicle);
 
 // Sale Endpoints
 router.get('/sale', getAllSaleVehicles);
 router.get('/sale/:id', getSaleVehicleById);
-router.post('/sale', protect, adminOnly, createSaleVehicle);
+router.post('/sale', protect, adminOnly, upload.array('images', 5), createSaleVehicle);
 router.put('/sale/:id', protect, adminOnly, updateSaleVehicle);
 router.delete('/sale/:id', protect, adminOnly, deleteSaleVehicle);
 

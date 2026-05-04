@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
 
 const AdminPaymentsScreen = ({ navigation }) => {
@@ -25,6 +26,35 @@ const AdminPaymentsScreen = ({ navigation }) => {
   
   // Processing State
   const [processingId, setProcessingId] = useState(null);
+
+  // Date Update State
+  const [showWebDatePicker, setShowWebDatePicker] = useState(null); // stores payment ID
+  const [showMobilePicker, setShowMobilePicker] = useState(null);
+  const [tempDate, setTempDate] = useState(new Date());
+
+  const handleDateUpdate = async (id, newDate) => {
+    try {
+      setProcessingId(id);
+      await api.put(`/payments/${id}`, { paymentDate: newDate });
+      if (Platform.OS === 'web') window.alert('Payment date updated successfully.');
+      else Alert.alert('Success', 'Payment date updated successfully.');
+      fetchPayments();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update payment date.');
+    } finally {
+      setProcessingId(null);
+      setShowWebDatePicker(null);
+    }
+  };
+
+  const openDatePicker = (id, currentDate) => {
+    if (Platform.OS === 'web') {
+      setShowWebDatePicker(id);
+    } else {
+      setTempDate(new Date(currentDate));
+      setShowMobilePicker(id);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -153,13 +183,45 @@ const AdminPaymentsScreen = ({ navigation }) => {
                   <Text style={styles.dateTxt}>Paid On: {new Date(p.paymentDate).toLocaleDateString()}</Text>
                   <Text style={styles.amountTxt}>Amount: Rs. {p.amount?.toLocaleString()}</Text>
                   
-                  <TouchableOpacity 
-                    style={styles.viewSlipBtn}
-                    onPress={() => handleViewSlip(p.bankSlipUrl)}
-                  >
-                    <Text style={styles.viewSlipTxt}>👁️ View Bank Slip</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity 
+                      style={styles.viewSlipBtn}
+                      onPress={() => handleViewSlip(p.bankSlipUrl)}
+                    >
+                      <Text style={styles.viewSlipTxt}>👁️ View Slip</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.viewSlipBtn, { borderColor: '#c9a052' }]}
+                      onPress={() => openDatePicker(p._id, p.paymentDate)}
+                    >
+                      <Text style={[styles.viewSlipTxt, { color: '#c9a052' }]}>📅 Edit Date</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+
+                {/* Hidden Web Date Input */}
+                {Platform.OS === 'web' && showWebDatePicker === p._id && (
+                  <input 
+                    type="date"
+                    style={styles.webDateInput}
+                    onChange={(e) => handleDateUpdate(p._id, e.target.value)}
+                    onBlur={() => setShowWebDatePicker(null)}
+                    autoFocus
+                  />
+                )}
+
+                {showMobilePicker === p._id && Platform.OS !== 'web' && (
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, date) => {
+                      setShowMobilePicker(null);
+                      if (date) handleDateUpdate(p._id, date.toISOString().split('T')[0]);
+                    }}
+                  />
+                )}
 
                 {p.status === 'Pending' && (
                   <View style={styles.actionsRow}>
@@ -246,6 +308,7 @@ const styles = StyleSheet.create({
   closeModal: { position: 'absolute', top: 40, right: 20, zIndex: 10, padding: 10, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20 },
   closeModalTxt: { color: '#fff', fontWeight: 'bold' },
   fullImage: { width: '90%', height: '70%' },
+  webDateInput: { marginTop: 10, padding: 8, borderRadius: 5, border: '1px solid #c9a052', width: '100%' },
 });
 
 export default AdminPaymentsScreen;

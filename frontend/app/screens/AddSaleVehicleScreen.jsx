@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +10,9 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Image
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import api from '../../services/api';
 
 const AddSaleVehicleScreen = ({ navigation }) => {
@@ -26,36 +27,72 @@ const AddSaleVehicleScreen = ({ navigation }) => {
     mileage: '',
     price: '',
     description: '',
-    imageUrl: '', // For simple demo, using a text URL for image
   });
 
+  const [selectedImages, setSelectedImages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const pickImages = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.7,
+      selectionLimit: 5,
+    });
+
+    if (!result.canceled) {
+      const newImages = [...selectedImages, ...result.assets.map(a => a.uri)].slice(0, 5);
+      setSelectedImages(newImages);
+    }
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.price || !formData.brand) {
-      if (Platform.OS === 'web') window.alert("Please fill required fields (Name, Brand, Price)");
-      else Alert.alert("Required", "Please fill Name, Brand, and Price");
+      Alert.alert("Required", "Please fill Name, Brand, and Price");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/vehicles/sale', {
-        ...formData,
-        price: parseFloat(formData.price),
-        mileage: parseFloat(formData.mileage),
-        yearReg: parseInt(formData.yearReg),
-        yom: parseInt(formData.yom),
-        images: [formData.imageUrl]
+      const data = new FormData();
+      
+      // Append fields
+      Object.keys(formData).forEach(key => {
+        data.append(key, formData[key]);
       });
 
-      if (Platform.OS === 'web') window.alert("Sale vehicle added successfully!");
-      else Alert.alert("Success", "Sale vehicle added successfully!");
+      // Append Images
+      for (const [index, uri] of selectedImages.entries()) {
+        if (Platform.OS === 'web') {
+          const res = await fetch(uri);
+          const blob = await res.blob();
+          data.append('images', blob, `upload_${index}.jpg`);
+        } else {
+          const filename = uri.split('/').pop() || `upload_${index}.jpg`;
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : `image/jpeg`;
+          
+          data.append('images', {
+            uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+            name: filename,
+            type
+          });
+        }
+      }
+
+      await api.post('/vehicles/sale', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      Alert.alert("Success", "Sale vehicle added successfully!");
       navigation.goBack();
     } catch (err) {
       console.log(err);
-      if (Platform.OS === 'web') window.alert("Failed to add vehicle");
-      else Alert.alert("Error", "Failed to add vehicle");
+      Alert.alert("Error", "Failed to add vehicle");
     } finally {
       setLoading(false);
     }
@@ -118,7 +155,25 @@ const AddSaleVehicleScreen = ({ navigation }) => {
 
           <Text style={styles.sectionLabel}>PRICING & MEDIA</Text>
           <TextInput style={[styles.input, styles.priceInput]} placeholder="Price (Rs.)" keyboardType="numeric" value={formData.price} onChangeText={v => inputChange('price', v)} />
-          <TextInput style={styles.input} placeholder="Image URL" value={formData.imageUrl} onChangeText={v => inputChange('imageUrl', v)} />
+          
+          <Text style={styles.smallLabel}>VEHICLE IMAGES (MAX 5)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
+            {selectedImages.map((uri, index) => (
+              <View key={index} style={styles.imageWrapper}>
+                <Image source={{ uri }} style={styles.previewImg} />
+                <TouchableOpacity style={styles.removeImgBtn} onPress={() => removeImage(index)}>
+                  <Text style={styles.removeImgTxt}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {selectedImages.length < 5 && (
+              <TouchableOpacity style={styles.addImageBtn} onPress={pickImages}>
+                <Text style={styles.addImageTxt}>+</Text>
+                <Text style={{ fontSize: 10, color: '#888' }}>Add Photo</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+
           <TextInput style={[styles.input, {height: 80}]} placeholder="Description" multiline value={formData.description} onChangeText={v => inputChange('description', v)} />
 
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
@@ -145,7 +200,16 @@ const styles = StyleSheet.create({
   col: { flex: 1, marginRight: 10 },
   webSelect: { width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: '#1e212a', color: '#fff', border: 'none' },
   submitBtn: { backgroundColor: '#c9a052', padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  submitBtnTxt: { color: '#000', fontWeight: 'bold', fontSize: 16 }
+  submitBtnTxt: { color: '#000', fontWeight: 'bold', fontSize: 16 },
+
+  // Image Picker Styles
+  imageScroll: { flexDirection: 'row', marginTop: 5, marginBottom: 15 },
+  imageWrapper: { marginRight: 12, position: 'relative' },
+  previewImg: { width: 80, height: 80, borderRadius: 10, backgroundColor: '#1e212a' },
+  removeImgBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: '#ef4444', width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  removeImgTxt: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  addImageBtn: { width: 80, height: 80, borderRadius: 10, borderStyle: 'dashed', borderWidth: 1, borderColor: '#444', justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e212a' },
+  addImageTxt: { fontSize: 24, color: '#c9a052', marginBottom: 2 },
 });
 
 export default AddSaleVehicleScreen;

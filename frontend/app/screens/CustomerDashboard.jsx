@@ -10,13 +10,12 @@ import {
 } from 'react-native';
 import CustomHeader from '../components/CustomHeader';
 
+import { AuthContext } from '../../context/AuthContext';
+
 const CustomerDashboard = ({ navigation }) => {
-  const { user } = useContext(AuthContext); // logout logic is now inside CustomHeader
+  const { user } = useContext(AuthContext);
 
   const menuItems = [
-    { title: 'Update Profile', icon: '👤', desc: 'Edit your personal details & password', screen: 'UpdateProfile' },
-    { title: 'Rent a Vehicle', icon: '🚗', desc: 'Browse our premium fleet for rent', screen: 'RentGallery' },
-    { title: 'Buy a Vehicle', icon: '🚘', desc: 'Find your dream car to purchase', screen: 'BuyGallery' },
     { title: 'Rental History & Reviews', icon: '⭐', desc: 'Rate your past rides', screen: 'RentalHistory' },
     { title: 'Payment History', icon: '🧾', desc: 'View your bookings and payments', screen: 'PaymentHistory' },
     { title: 'Notifications', icon: '🔔', desc: 'View alerts & special offers', screen: 'CustomerNotifications' },
@@ -25,27 +24,11 @@ const CustomerDashboard = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      <CustomHeader title="Customer Dashboard" showBack={false} showLogout={true} />
-      
+      <CustomHeader title="Customer Dashboard" showBack={false} />
+
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Welcome Card */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.welcomeAvatar}>
-            <Text style={styles.welcomeAvatarTxt}>{user?.fullName?.[0] || 'U'}</Text>
-          </View>
-          <View style={styles.welcomeInfo}>
-            <Text style={styles.welcomeName}>Welcome back, {user?.fullName?.split(' ')[0] || 'User'}! 👋</Text>
-            <Text style={styles.welcomeEmail}>{user?.email}</Text>
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeTxt}>CUSTOMER</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.menuGrid}>
             {menuItems.map((item, i) => (
               <TouchableOpacity
@@ -67,30 +50,7 @@ const CustomerDashboard = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Account Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Details</Text>
-          <View style={styles.detailsCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Full Name</Text>
-              <Text style={styles.detailValue}>{user?.fullName}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailValue}>{user?.email}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Phone</Text>
-              <Text style={styles.detailValue}>{user?.phone || 'Not set'}</Text>
-            </View>
-            <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-              <Text style={styles.detailLabel}>Account Status</Text>
-              <View style={styles.statusActive}>
-                <Text style={styles.statusActiveTxt}>• ACTIVE</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+        <View style={{ height: 40 }} />
 
         <View style={{ height: 40 }} />
       </ScrollView>

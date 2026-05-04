@@ -5,12 +5,20 @@ const {
   checkAvailability,
   createBooking,
   cancelBooking,
-  getCustomerBookings
+  getCustomerBookings,
+  getAllBookings,
+  updateBookingStatus,
+  deleteBooking
 } = require('../controllers/bookingController');
 
-router.get('/check-availability', checkAvailability); // Public or protected based on your need
+router.get('/check-availability', checkAvailability);
 router.post('/create', protect, createBooking);
 router.delete('/:id', protect, cancelBooking);
 router.get('/my-bookings', protect, getCustomerBookings);
+
+// Admin Routes
+router.get('/admin/all', protect, getAllBookings);
+router.put('/admin/status/:id', protect, updateBookingStatus);
+router.delete('/admin/:id', protect, deleteBooking);
 
 module.exports = router;

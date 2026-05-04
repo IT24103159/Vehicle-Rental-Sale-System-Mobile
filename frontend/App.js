@@ -24,11 +24,94 @@ import AdminPromotionsScreen from './app/screens/AdminPromotionsScreen';
 import CustomerNotificationsScreen from './app/screens/CustomerNotificationsScreen';
 import RentalHistoryScreen from './app/screens/RentalHistoryScreen';
 import AddSaleVehicleScreen from './app/screens/AddSaleVehicleScreen';
+import SaleVehicleDetailsScreen from './app/screens/SaleVehicleDetailsScreen';
+import AdminInquiriesScreen from './app/screens/AdminInquiriesScreen';
+import AdminBookingsScreen from './app/screens/AdminBookingsScreen';
+import AccountScreen from './app/screens/AccountScreen';
+
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text } from 'react-native';
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// --- HOME STACK (Public) ---
+const HomeStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+    <Stack.Screen name="HomeMain" component={HomeScreen} />
+    <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
+    <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
+    <Stack.Screen name="RentBooking" component={RentBookingScreen} />
+    <Stack.Screen name="SaleVehicleDetails" component={SaleVehicleDetailsScreen} />
+    <Stack.Screen name="Payment" component={PaymentScreen} />
+    <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
+  </Stack.Navigator>
+);
+
+// --- DASHBOARD STACK (Protected) ---
+const DashboardStack = () => {
+  const { user } = useContext(AuthContext);
+
+  if (!user) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  if (user.role === 'Admin') {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+        <Stack.Screen name="AdminHome" component={AdminDashboard} />
+        <Stack.Screen name="FleetManagement" component={FleetManagementScreen} />
+        <Stack.Screen name="AdminPayments" component={AdminPaymentsScreen} />
+        <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
+        <Stack.Screen name="AddSaleVehicle" component={AddSaleVehicleScreen} />
+        <Stack.Screen name="UserManagement" component={UserManagementScreen} />
+        <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
+        <Stack.Screen name="Fleet" component={FleetManagementScreen} />
+        <Stack.Screen name="AdminInquiries" component={AdminInquiriesScreen} />
+        <Stack.Screen name="AdminBookings" component={AdminBookingsScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+      <Stack.Screen name="CustomerHome" component={CustomerDashboard} />
+      <Stack.Screen name="Payment" component={PaymentScreen} />
+      <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
+      <Stack.Screen name="RentalHistory" component={RentalHistoryScreen} />
+      <Stack.Screen name="CustomerNotifications" component={CustomerNotificationsScreen} />
+    </Stack.Navigator>
+  );
+};
+
+// --- ACCOUNT STACK (Protected) ---
+const AccountStack = () => {
+  const { user } = useContext(AuthContext);
+
+  if (!user) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#f0ebe0' } }}>
+      <Stack.Screen name="AccountMain" component={AccountScreen} />
+      <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen} />
+    </Stack.Navigator>
+  );
+};
 
 const Navigation = () => {
-  const { user, loading } = useContext(AuthContext);
+  const { loading } = useContext(AuthContext);
 
   if (loading) {
     return (
@@ -38,80 +121,60 @@ const Navigation = () => {
     );
   }
 
-  // Determine initial route based on login state and role
-  let initialRoute = 'Home';
-  if (user) {
-    initialRoute = user.role === 'Admin' ? 'AdminHome' : 'CustomerHome';
-  }
-
-  // Configuration for Web Browser URL routing and Back Button support
   const linking = {
     prefixes: ['http://localhost:8081', 'https://your-app-url.com'],
     config: {
       screens: {
-        Home: '',
-        Login: 'login',
-        Register: 'register',
-        RentGallery: 'rent',
-        BuyGallery: 'buy',
-        CustomerHome: 'customer/dashboard',
-        UpdateProfile: 'customer/profile',
-        AdminHome: 'admin/dashboard',
-        UserManagement: 'admin/users',
-        AddVehicle: 'admin/add-vehicle',
-        Fleet: 'admin/fleet',
+        HomeTab: '',
+        DashboardTab: 'dashboard',
+        AccountTab: 'account',
       },
     },
   };
 
   return (
     <NavigationContainer linking={linking}>
-      <Stack.Navigator
+      <Tab.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: '#f0ebe0' },
+          tabBarActiveTintColor: '#c9a052',
+          tabBarInactiveTintColor: '#888',
+          tabBarStyle: { 
+            backgroundColor: '#fff', 
+            borderTopColor: '#e0e0e0',
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+            elevation: 5,
+          },
+          tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold' }
         }}
       >
-        {user == null ? (
-          // --- Auth / Public Stack ---
-          <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
-            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
-          </>
-        ) : user.role === 'Admin' ? (
-          // --- Admin Stack ---
-          <>
-            <Stack.Screen name="AdminHome" component={AdminDashboard} />
-            <Stack.Screen name="FleetManagement" component={FleetManagementScreen} />
-            <Stack.Screen name="AdminPayments" component={AdminPaymentsScreen} />
-            <Stack.Screen name="AdminPromotions" component={AdminPromotionsScreen} />
-            <Stack.Screen name="AddSaleVehicle" component={AddSaleVehicleScreen} />
-            <Stack.Screen name="UserManagement" component={UserManagementScreen} />
-            <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
-            <Stack.Screen name="Fleet" component={FleetManagementScreen} />
-            {/* Allow admin to view galleries if needed */}
-            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
-            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
-          </>
-        ) : (
-          // --- Customer Stack ---
-          <>
-            <Stack.Screen name="CustomerHome" component={CustomerDashboard} />
-            <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen} />
-            <Stack.Screen name="RentBooking" component={RentBookingScreen} />
-            <Stack.Screen name="Payment" component={PaymentScreen} />
-            <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} />
-            <Stack.Screen name="RentalHistory" component={RentalHistoryScreen} />
-            <Stack.Screen name="CustomerNotifications" component={CustomerNotificationsScreen} />
-            {/* Allow customer to access galleries and booking */}
-            <Stack.Screen name="RentGallery" component={RentGalleryScreen} />
-            <Stack.Screen name="BuyGallery" component={BuyGalleryScreen} />
-          </>
-        )}
-      </Stack.Navigator>
+        <Tab.Screen 
+          name="HomeTab" 
+          component={HomeStack} 
+          options={{ 
+            tabBarLabel: 'Home', 
+            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>🏠</Text> 
+          }} 
+        />
+        <Tab.Screen 
+          name="DashboardTab" 
+          component={DashboardStack} 
+          options={{ 
+            tabBarLabel: 'Dashboard', 
+            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>🎛️</Text> 
+          }} 
+        />
+        <Tab.Screen 
+          name="AccountTab" 
+          component={AccountStack} 
+          options={{ 
+            tabBarLabel: 'Account', 
+            tabBarIcon: ({ color }) => <Text style={{color, fontSize: 20}}>👤</Text> 
+          }} 
+        />
+      </Tab.Navigator>
     </NavigationContainer>
   );
 };

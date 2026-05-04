@@ -1,6 +1,7 @@
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
 const VehicleRent = require('../models/VehicleRent');
+const emailService = require('../services/emailService');
 
 exports.uploadPayment = async (req, res) => {
   try {
@@ -64,21 +65,25 @@ exports.updatePaymentStatus = async (req, res) => {
 
     // Automation: If approved, update booking and lock vehicle
     if (status === 'Approved') {
-      const booking = await Booking.findById(payment.bookingId._id);
+      const booking = await Booking.findById(payment.bookingId._id).populate('customerId');
       if (booking) {
         booking.bookingStatus = 'Confirmed';
         await booking.save();
 
         const vehicle = await VehicleRent.findById(booking.vehicleRentId);
-        if (vehicle) {
-          vehicle.status = 'Reserved';
-          await vehicle.save();
-        }
+        
+        // Generate PDF invoice and send Email
+        await emailService.sendApprovalEmail(booking, payment, booking.customerId, vehicle);
       }
-      // Note: PDF invoice generation and email logic would go here
     } else if (status === 'Rejected') {
-      // If rejected, vehicle remains available or pending
-      // Note: Rejection email logic would go here
+      const booking = await Booking.findById(payment.bookingId._id).populate('customerId');
+      if (booking) {
+        booking.bookingStatus = 'Pending Payment';
+        await booking.save();
+        
+        // Send Rejection Email with Remarks
+        await emailService.sendRejectionEmail(payment, booking, booking.customerId);
+      }
     }
 
     res.json(payment);

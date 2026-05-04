@@ -36,9 +36,13 @@ exports.createRentVehicle = async (req, res) => {
     console.log(req.body);
     console.log('User ID from Token:', req.user._id);
 
+    // Extract Cloudinary URLs from uploaded files
+    const imageUrls = req.files ? req.files.map(file => file.path) : [];
+
     // Convert string numbers to real numbers before saving
     const data = {
       ...req.body,
+      images: imageUrls,
       year: req.body.year ? Number(req.body.year) : undefined,
       dailyRate: Number(req.body.dailyRate),
       mileageLimit: req.body.mileageLimit ? Number(req.body.mileageLimit) : undefined,
@@ -117,8 +121,12 @@ exports.getSaleVehicleById = async (req, res) => {
 
 exports.createSaleVehicle = async (req, res) => {
   try {
+    // Extract Cloudinary URLs from uploaded files
+    const imageUrls = req.files ? req.files.map(file => file.path) : [];
+
     const data = {
       ...req.body,
+      images: imageUrls,
       price: Number(req.body.price),
       yom: req.body.yom ? Number(req.body.yom) : undefined,
       yearReg: req.body.yearReg ? Number(req.body.yearReg) : undefined,

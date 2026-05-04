@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   nic: { type: String, required: true, unique: true },
   role: { type: String, enum: ['Customer', 'Admin'], required: true },
   phone: { type: String, required: true },
+  profilePic: { type: String, default: null },
   // Customer-specific
   licenseUrl: { type: String, default: null },
   // Account status

@@ -145,7 +145,11 @@ const RentBookingScreen = ({ route, navigation }) => {
     setIsApplyingPromo(true);
     setPromoError(null);
     try {
-      const res = await api.post('/promotions/verify', { code: promoCode });
+      const res = await api.post('/promotions/verify', { 
+        code: promoCode,
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      });
       const promo = res.data;
       
       const discountAmount = (costDetails.total * promo.discountPercent) / 100;
@@ -480,7 +484,7 @@ const styles = StyleSheet.create({
   revName: { fontWeight: 'bold', color: '#333', fontSize: 13 },
   revStars: { color: '#c9a052', fontSize: 14 },
   revComment: { color: '#555', fontSize: 13, lineHeight: 18, marginBottom: 8 },
-  revDate: { color: '#aaa', fontSize: 10, textAlign: 'right' }
+  revDate: { color: '#aaa', fontSize: 10, textAlign: 'right' },
 });
 
 export default RentBookingScreen;

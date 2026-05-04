@@ -80,10 +80,10 @@ const PaymentScreen = ({ route, navigation }) => {
 
       if (Platform.OS === 'web') {
         window.alert('Payment Uploaded Successfully. Waiting for Admin Approval.');
-        navigation.navigate('CustomerHome');
+        navigation.navigate('HomeTab');
       } else {
         Alert.alert('Success', 'Payment Uploaded Successfully. Waiting for Admin Approval.', [
-          { text: 'OK', onPress: () => navigation.navigate('CustomerHome') }
+          { text: 'OK', onPress: () => navigation.navigate('HomeTab') }
         ]);
       }
     } catch (error) {
@@ -98,9 +98,14 @@ const PaymentScreen = ({ route, navigation }) => {
       setCancelling(true);
       try {
         await api.delete(`/bookings/${bookingId}`);
-        Alert.alert('Cancelled', 'Your booking has been cancelled successfully.', [
-          { text: 'OK', onPress: () => navigation.navigate('CustomerHome') }
-        ]);
+        if (Platform.OS === 'web') {
+          window.alert('Your booking has been cancelled successfully.');
+          navigation.navigate('DashboardTab');
+        } else {
+          Alert.alert('Cancelled', 'Your booking has been cancelled successfully.', [
+            { text: 'OK', onPress: () => navigation.navigate('DashboardTab') }
+          ]);
+        }
       } catch (error) {
         Alert.alert('Error', error.response?.data?.message || 'Failed to cancel booking.');
       } finally {
@@ -160,6 +165,7 @@ const PaymentScreen = ({ route, navigation }) => {
               <input
                 type="date"
                 style={styles.webDateInput}
+                min={new Date().toISOString().split('T')[0]}
                 value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
               />
@@ -176,6 +182,7 @@ const PaymentScreen = ({ route, navigation }) => {
               value={tempDate}
               mode="date"
               display="default"
+              minimumDate={new Date()}
               onChange={onDateChange}
             />
           )}

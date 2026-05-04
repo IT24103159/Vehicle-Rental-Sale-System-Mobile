@@ -33,6 +33,11 @@ exports.registerUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        nic: user.nic,
+        phone: user.phone,
+        profilePic: user.profilePic,
+        licenseUrl: user.licenseUrl,
+        status: user.status,
         token: generateToken(user._id)
       });
     }
@@ -59,6 +64,11 @@ exports.loginUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        nic: user.nic,
+        phone: user.phone,
+        profilePic: user.profilePic,
+        licenseUrl: user.licenseUrl,
+        status: user.status,
         token: generateToken(user._id)
       });
     } else {

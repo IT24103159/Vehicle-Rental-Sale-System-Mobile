@@ -66,17 +66,34 @@ exports.deletePromotion = async (req, res) => {
 
 exports.verifyPromoCode = async (req, res) => {
   try {
-    const { code } = req.body;
-    const today = new Date();
+    const { code, startDate, endDate } = req.body;
     
     const promo = await Promotion.findOne({
-      code: code.toUpperCase(),
-      startDate: { $lte: today },
-      endDate: { $gte: today }
+      code: code.toUpperCase()
     });
 
     if (!promo) {
-      return res.status(404).json({ message: 'Invalid or expired promo code' });
+      return res.status(404).json({ message: 'Invalid promo code' });
+    }
+
+    // If booking dates are provided, check if they fall within the promo range
+    if (startDate && endDate) {
+      const bookStart = new Date(startDate);
+      const bookEnd = new Date(endDate);
+      const promoStart = new Date(promo.startDate);
+      const promoEnd = new Date(promo.endDate);
+
+      if (bookStart < promoStart || bookEnd > promoEnd) {
+        return res.status(400).json({ 
+          message: `This code is only valid for bookings between ${promoStart.toLocaleDateString()} and ${promoEnd.toLocaleDateString()}` 
+        });
+      }
+    } else {
+      // Default: just check if today is within range
+      const today = new Date();
+      if (today < promo.startDate || today > promo.endDate) {
+        return res.status(400).json({ message: 'This promo code has expired or is not yet active' });
+      }
     }
 
     res.json(promo);

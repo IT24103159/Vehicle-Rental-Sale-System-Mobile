@@ -33,6 +33,13 @@ exports.createBooking = async (req, res) => {
   try {
     const { customerId, vehicleRentId, startDate, endDate, totalCost, promoCode } = req.body;
 
+    let promoId = null;
+    if (promoCode) {
+      const Promotion = require('../models/Promotion');
+      const promo = await Promotion.findOne({ code: promoCode.toUpperCase() });
+      if (promo) promoId = promo._id;
+    }
+
     const booking = await Booking.create({
       customerId,
       vehicleRentId,
@@ -40,7 +47,7 @@ exports.createBooking = async (req, res) => {
       endDate,
       totalCost,
       bookingStatus: 'Pending Payment',
-      // If promo was applied, you could store promoId. We skip it here for simplicity.
+      promoId
     });
 
     res.status(201).json(booking);
@@ -75,6 +82,49 @@ exports.getCustomerBookings = async (req, res) => {
       .populate('vehicleRentId')
       .sort({ createdAt: -1 });
     res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// --- ADMIN FUNCTIONS --- //
+
+exports.getAllBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find()
+      .populate('customerId', 'fullName email phone')
+      .populate('vehicleRentId', 'name brand type')
+      .sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bookingStatus } = req.body;
+    
+    const booking = await Booking.findByIdAndUpdate(
+      id, 
+      { bookingStatus }, 
+      { new: true }
+    );
+    
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.json(booking);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findByIdAndDelete(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.json({ message: 'Booking deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
