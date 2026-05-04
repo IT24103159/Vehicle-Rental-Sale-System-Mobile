@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Image,
 } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import CustomHeader from '../components/CustomHeader';
@@ -25,7 +26,11 @@ const AccountScreen = ({ navigation }) => {
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeAvatar}>
-            <Text style={styles.welcomeAvatarTxt}>{user?.fullName?.[0] || 'U'}</Text>
+            {user?.profilePic ? (
+              <Image source={{ uri: user.profilePic }} style={styles.avatarImg} />
+            ) : (
+              <Text style={styles.welcomeAvatarTxt}>{user?.fullName?.[0] || 'U'}</Text>
+            )}
           </View>
           <View style={styles.welcomeInfo}>
             <Text style={styles.welcomeName}>Welcome back, {user?.fullName?.split(' ')[0] || 'User'}! 👋</Text>
@@ -36,50 +41,30 @@ const AccountScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Account Details Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Details</Text>
-          <View style={styles.detailsCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Full Name</Text>
-              <Text style={styles.detailValue}>{user?.fullName}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailValue}>{user?.email}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Phone</Text>
-              <Text style={styles.detailValue}>{user?.phone || 'Not set'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>NIC Number</Text>
-              <Text style={styles.detailValue}>{user?.nic || 'Not set'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Driving License</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>{user?.licenseUrl || 'Not set'}</Text>
-            </View>
-            <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-              <Text style={styles.detailLabel}>Account Status</Text>
-              <View style={styles.statusActive}>
-                <Text style={styles.statusActiveTxt}>• ACTIVE</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+
 
         {/* Account Menu */}
         <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Account Settings</Text>
 
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('UpdateProfile')}
           >
-            <Text style={styles.menuIcon}>👤</Text>
-            <Text style={styles.menuText}>Edit Profile</Text>
-            <Text style={styles.menuArrow}>→</Text>
+
+            <Text style={styles.menuText}>Account Settings</Text>
+            <Text style={styles.menuArrow}></Text>
+
+
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+
+          >
+
+            <Text style={styles.menuText}>About Us</Text>
+            <Text style={styles.menuArrow}></Text>
+
+
           </TouchableOpacity>
 
 
@@ -121,6 +106,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   welcomeAvatarTxt: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+  avatarImg: { width: 60, height: 60, borderRadius: 30 },
   welcomeInfo: { flex: 1 },
   welcomeName: { fontSize: 18, fontWeight: 'bold', color: '#111318' },
   welcomeEmail: { fontSize: 13, color: '#6c757d', marginTop: 2 },
@@ -136,7 +122,7 @@ const styles = StyleSheet.create({
 
   menuSection: { backgroundColor: '#fff', borderRadius: 16, padding: 10, marginBottom: 30 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#111318', marginBottom: 15 },
-  
+
   detailsCard: {
     backgroundColor: '#fff',
     borderRadius: 16,

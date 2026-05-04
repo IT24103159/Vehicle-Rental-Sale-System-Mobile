@@ -103,6 +103,7 @@ exports.updateProfile = async (req, res) => {
       user.fullName = req.body.fullName || user.fullName;
       user.phone = req.body.phone || user.phone;
       user.licenseUrl = req.body.licenseUrl || user.licenseUrl;
+      user.profilePic = req.body.profilePic !== undefined ? req.body.profilePic : user.profilePic;
 
       if (req.body.password) {
         user.password = req.body.password;
@@ -115,8 +116,11 @@ exports.updateProfile = async (req, res) => {
         fullName: updatedUser.fullName,
         email: updatedUser.email,
         role: updatedUser.role,
+        nic: updatedUser.nic,
         phone: updatedUser.phone,
+        profilePic: updatedUser.profilePic,
         licenseUrl: updatedUser.licenseUrl,
+        status: updatedUser.status,
         token: jwt.sign({ id: updatedUser._id }, process.env.JWT_SECRET, { expiresIn: '30d' }),
       });
     } else {
