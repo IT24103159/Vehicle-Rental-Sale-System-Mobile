@@ -1,0 +1,109 @@
+.profile-page {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 42px;
+  color: #1a202f;
+}
+
+.profile-header p {
+  margin: 5px 0 20px;
+  color: #697185;
+}
+
+.profile-card {
+  border: 1px solid #e6e0d2;
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.profile-card h2 {
+  margin: 0 0 18px;
+  font-size: 23px;
+  color: #162034;
+}
+
+.profile-form {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  color: #4f5870;
+  font-weight: 700;
+}
+
+.field-group input {
+  width: 100%;
+  border: 1px solid #d9d2c4;
+  background: #f7f7f5;
+  padding: 12px;
+  border-radius: 10px;
+  color: #1d2538;
+}
+
+.field-group input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.field-group small {
+  margin-top: 6px;
+  display: block;
+  color: #757e91;
+}
+
+.save-profile-btn {
+  width: fit-content;
+  background: #11192b;
+  color: #fff;
+  border: 1px solid rgba(198, 162, 95, 0.35);
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.save-profile-btn:hover {
+  background: #17253f;
+}
+
+.profile-alert {
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.profile-alert.error {
+  color: #9b2226;
+  background: #ffe8e8;
+  border: 1px solid #fecaca;
+}
+
+.profile-alert.success {
+  color: #116329;
+  background: #ecfdf3;
+  border: 1px solid #b7ebc5;
+}
+
+@media (max-width: 920px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-header h1 {
+    font-size: 34px;
+  }
+}
