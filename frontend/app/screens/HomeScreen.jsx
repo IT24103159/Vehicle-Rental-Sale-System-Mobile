@@ -18,48 +18,18 @@ const CARD_WIDTH = (width - 56) / 2;
 const HomeScreen = ({ navigation }) => {
   const { user, logout } = useContext(AuthContext);
 
-  const stats = [
-    { value: '500+', label: 'Vehicles', icon: '🚗' },
-    { value: '2,000+', label: 'Clients', icon: '👥' },
-    { value: '15+', label: 'Years', icon: '📅' },
-    { value: '4.9★', label: 'Rating', icon: '⭐' },
-  ];
-
-  const services = [
-    { icon: '🚘', title: 'Rent Vehicle', desc: 'Browse fleet & book rides', screen: 'RentGallery' },
-    { icon: '💰', title: 'Buy Vehicle', desc: 'Premium cars for sale', screen: 'BuyGallery' },
-    { icon: '📊', title: 'Trip Estimator', desc: 'Calculate trip costs', screen: 'TripEstimator' },
-    { icon: '📋', title: 'My Bookings', desc: 'Manage reservations', screen: 'BookingHistory' },
-    { icon: '💳', title: 'Payments', desc: 'Track & manage slips', screen: 'PaymentHistory' },
-    { icon: '⭐', title: 'Reviews', desc: 'Rate your experience', screen: 'Reviews' },
-  ];
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-        
+
         <View style={styles.header}>
           <View>
             <Text style={styles.helloTxt}>Hello,</Text>
             <Text style={styles.userNameTxt}>{user?.fullName?.split(' ')[0] || 'Guest'} 👋</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {user && (
-              <TouchableOpacity 
-                onPress={() => navigation.navigate('UpdateProfile')}
-                style={[styles.authBtn, { borderColor: '#161b27' }]}
-              >
-                <Text style={[styles.authBtnText, { color: '#161b27' }]}>PROFILE</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity 
-              onPress={() => user ? logout() : navigation.navigate('Login')}
-              style={styles.authBtn}
-            >
-              <Text style={styles.authBtnText}>{user ? 'LOGOUT' : 'LOGIN'}</Text>
-            </TouchableOpacity>
-          </View>
+
         </View>
 
         <View style={styles.heroSection}>
@@ -71,13 +41,13 @@ const HomeScreen = ({ navigation }) => {
             Welcome to the premium portal. Manage your rentals and access tools seamlessly.
           </Text>
           <View style={styles.heroActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.mainBtn}
               onPress={() => navigation.navigate('RentGallery')}
             >
               <Text style={styles.mainBtnText}>Rent a Vehicle</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.secBtn}
               onPress={() => navigation.navigate('BuyGallery')}
             >
@@ -86,59 +56,8 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.statsBar}>
-          {stats.map((s, i) => (
-            <View key={i} style={[styles.statItem, i === stats.length - 1 && { borderRightWidth: 0 }]}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-          ))}
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>OUR SERVICES</Text>
-            <Text style={styles.sectionTitle}>
-              Drive with confidence, <Text style={styles.goldText}>your journey starts here</Text>
-            </Text>
-          </View>
 
-          <View style={styles.grid}>
-            {services.map((s, i) => (
-              <TouchableOpacity key={i} style={styles.svcCard} activeOpacity={0.8}>
-                <View style={styles.svcIconWrap}>
-                  <Text style={styles.svcIconText}>{s.icon}</Text>
-                </View>
-                <Text style={styles.svcTitle}>{s.title}</Text>
-                <Text style={styles.svcDesc}>{s.desc}</Text>
-                <Text style={styles.svcCta}>Try Now →</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.trustSection}>
-          <Text style={styles.trustEyebrow}>WHY CHOOSE US</Text>
-          <Text style={styles.trustTitle}>Seamless <Text style={styles.goldText}>vehicle management</Text> at your fingertips</Text>
-          
-          <View style={styles.trustBadges}>
-            <View style={styles.trustBadge}>
-              <Text style={styles.trustBadgeIcon}>🛡️</Text>
-              <Text style={styles.trustBadgeTxt}>Secure</Text>
-            </View>
-            <View style={styles.trustBadge}>
-              <Text style={styles.trustBadgeIcon}>🕐</Text>
-              <Text style={styles.trustBadgeTxt}>24/7 Help</Text>
-            </View>
-            <View style={styles.trustBadge}>
-              <Text style={styles.trustBadgeIcon}>✅</Text>
-              <Text style={styles.trustBadgeTxt}>Free Cancel</Text>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.copyright}>© 2026 Samarasinghe Motors</Text>
-        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -159,14 +78,7 @@ const styles = StyleSheet.create({
   },
   helloTxt: { fontSize: 14, color: '#5a5e6b' },
   userNameTxt: { fontSize: 20, fontWeight: 'bold', color: '#111318' },
-  authBtn: {
-    borderWidth: 1,
-    borderColor: '#c9a052',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  authBtnText: { color: '#c9a052', fontSize: 12, fontWeight: 'bold' },
+
 
   heroSection: {
     paddingTop: 30,
@@ -292,7 +204,7 @@ const styles = StyleSheet.create({
   trustBadgeIcon: { fontSize: 20, marginBottom: 5 },
   trustBadgeTxt: { fontSize: 9, color: '#c9a052', fontWeight: '600' },
 
-  copyright: { textAlign: 'center', color: '#8f94a5', fontSize: 11, marginTop: 40 },
+
 });
 
 export default HomeScreen;

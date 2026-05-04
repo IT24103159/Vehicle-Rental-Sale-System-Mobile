@@ -32,15 +32,14 @@ const AdminDashboard = ({ navigation }) => {
     { title: 'Bookings', icon: '📋', desc: 'Review and approve bookings', screen: 'AdminBookings' },
     { title: 'Payments', icon: '💳', desc: 'Approve bank slip payments', screen: 'AdminPayments' },
     { title: 'Promotions', icon: '🎁', desc: 'Create & manage discount codes', screen: 'AdminPromotions' },
-    { title: 'Add Sale Vehicle', icon: '🏎️', desc: 'Add new vehicle for sale fleet', screen: 'AddSaleVehicle' },
     { title: 'Inquiries', icon: '✉️', desc: 'Reply to customer inquiries', screen: 'AdminInquiries' },
   ];
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
-      <CustomHeader title={`Welcome, ${user?.fullName || 'Admin'}`} showBack={false} showLogout={true} />
-      
+      <CustomHeader title={`Welcome, ${user?.fullName || 'Admin'}`} showBack={false} />
+
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Metrics Grid */}

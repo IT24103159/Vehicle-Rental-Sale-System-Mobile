@@ -30,10 +30,7 @@ const LoginScreen = ({ navigation }) => {
     setIsSubmitting(true);
     const result = await login(email, password);
     setIsSubmitting(false);
-    if (result.success) {
-      const targetScreen = result.user?.role === 'Admin' ? 'AdminHome' : 'CustomerHome';
-      navigation.reset({ index: 0, routes: [{ name: targetScreen }] });
-    } else {
+    if (!result.success) {
       setErrorMsg(result.message);
     }
   };

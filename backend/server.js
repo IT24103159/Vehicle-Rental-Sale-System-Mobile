@@ -33,6 +33,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/promotions', require('./routes/promotionRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/inquiries', require('./routes/inquiryRoutes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Vehicle Rental & Sale System API is running...' });

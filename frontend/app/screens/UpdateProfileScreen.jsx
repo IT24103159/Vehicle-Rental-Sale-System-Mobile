@@ -16,7 +16,7 @@ import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const UpdateProfileScreen = ({ navigation }) => {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, logout } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     phone: user?.phone || '',
@@ -39,7 +39,7 @@ const UpdateProfileScreen = ({ navigation }) => {
     try {
       const response = await api.put('/users/profile', formData);
       const updatedUser = response.data;
-      
+
       // Update local context and storage
       if (Platform.OS === 'web') {
         localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -47,7 +47,7 @@ const UpdateProfileScreen = ({ navigation }) => {
         const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       }
-      
+
       setUser(updatedUser);
       setMsg({ type: 'success', text: 'Profile updated successfully!' });
       setTimeout(() => navigation.goBack(), 1500);
@@ -66,13 +66,15 @@ const UpdateProfileScreen = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          
+
           <View style={styles.headerArea}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 10 }}>
-              <Text style={{ color: '#c9a052', fontWeight: 'bold' }}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>Profile Settings</Text>
-            <Text style={styles.subtitle}>personal details • account security</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={styles.title}>Account Settings</Text>
+                <Text style={styles.subtitle}>personal details • account security</Text>
+              </View>
+
+            </View>
           </View>
 
           <View style={styles.card}>
@@ -167,7 +169,7 @@ const UpdateProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-          
+
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -178,10 +180,12 @@ const UpdateProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f0ebe0' },
   scrollContent: { paddingHorizontal: 24, paddingTop: 30 },
-  
+
   headerArea: { marginBottom: 30 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#0f1117' },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#0f1117' },
   subtitle: { fontSize: 13, color: '#6c757d', textTransform: 'lowercase', marginTop: 4 },
+  logoutBtn: { backgroundColor: '#ffebee', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#ffcdd2' },
+  logoutBtnTxt: { color: '#d32f2f', fontWeight: 'bold', fontSize: 13 },
 
   card: {
     backgroundColor: '#ffffff',
@@ -217,7 +221,7 @@ const styles = StyleSheet.create({
   },
   disabledInput: { backgroundColor: '#f8f9fa', color: '#6c757d', borderColor: '#eee' },
   infoHint: { fontSize: 11, color: '#007bff', marginTop: 6 },
-  
+
   saveBtn: {
     backgroundColor: '#111318',
     paddingVertical: 14,
