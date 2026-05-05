@@ -14,7 +14,9 @@ import {
   Image
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const AdminPromotionsScreen = ({ navigation }) => {
   const [promos, setPromos] = useState([]);
@@ -28,6 +30,10 @@ const AdminPromotionsScreen = ({ navigation }) => {
   const [imageUri, setImageUri] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Date Picker States
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -72,8 +78,7 @@ const AdminPromotionsScreen = ({ navigation }) => {
       const res = await api.get('/promotions');
       setPromos(res.data);
     } catch (err) {
-      if (Platform.OS === 'web') window.alert('Failed to fetch promotions');
-      else Alert.alert('Error', 'Failed to fetch promotions');
+      showAlert('Error', 'Failed to fetch promotions');
     } finally {
       setLoading(false);
     }
@@ -81,20 +86,17 @@ const AdminPromotionsScreen = ({ navigation }) => {
 
   const handleAdd = async () => {
     if (!newCode || !newDiscount || !newStart || !newEnd) {
-      if (Platform.OS === 'web') window.alert("Please fill all required fields");
-      else Alert.alert('Validation', "Please fill all required fields");
+      showAlert('Validation', "Please fill all required fields");
       return;
     }
     
     if (newStart < today) {
-      if (Platform.OS === 'web') window.alert("Start date cannot be in the past.");
-      else Alert.alert('Error', "Start date cannot be in the past.");
+      showAlert('Error', "Start date cannot be in the past.");
       return;
     }
     
     if (newEnd < newStart) {
-      if (Platform.OS === 'web') window.alert("End date must be after the start date.");
-      else Alert.alert('Error', "End date must be after the start date.");
+      showAlert('Error', "End date must be after the start date.");
       return;
     }
 
@@ -133,20 +135,17 @@ const AdminPromotionsScreen = ({ navigation }) => {
 
       if (editingId) {
         await api.put(`/promotions/${editingId}`, formData, config);
-        if (Platform.OS === 'web') window.alert("Promotion updated successfully!");
-        else Alert.alert('Success', "Promotion updated successfully!");
+        showAlert('Success', "Promotion updated successfully!");
       } else {
         await api.post('/promotions', formData, config);
-        if (Platform.OS === 'web') window.alert("Promotion created and notification sent!");
-        else Alert.alert('Success', "Promotion created and notification sent!");
+        showAlert('Success', "Promotion created and notification sent!");
       }
       
       resetForm();
       fetchPromos();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to process promotion';
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Error', msg);
+      showAlert('Error', msg);
     } finally {
       setSubmitting(false);
     }
@@ -158,116 +157,170 @@ const AdminPromotionsScreen = ({ navigation }) => {
         await api.delete(`/promotions/${id}`);
         fetchPromos();
       } catch (err) {
-        if (Platform.OS === 'web') window.alert('Failed to delete promotion');
-        else Alert.alert('Error', 'Failed to delete promotion');
+        showAlert('Error', 'Failed to delete promotion');
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm("Delete this promotion?")) confirmDelete();
+    showConfirm("Confirm", "Delete this promotion?", confirmDelete);
+  };
+
+  const onDateChange = (event, selectedDate, type) => {
+    if (type === 'start') {
+      setShowStartPicker(Platform.OS === 'ios');
+      if (selectedDate) {
+        setNewStart(selectedDate.toISOString().split('T')[0]);
+      }
     } else {
-      Alert.alert("Confirm", "Delete this promotion?", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: confirmDelete }
-      ]);
+      setShowEndPicker(Platform.OS === 'ios');
+      if (selectedDate) {
+        setNewEnd(selectedDate.toISOString().split('T')[0]);
+      }
     }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f0ebe0" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backBtnTxt}>← Dashboard</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Manage Promotions</Text>
+        <Text style={styles.headerTitle}>Promotions</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         {/* Create Promotion Card */}
         <View style={styles.card}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15}}>
-            <Text style={styles.cardTitle}>{editingId ? '✏️ Edit Campaign' : '➕ Create New Campaign'}</Text>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
+            <Text style={styles.cardTitle}>{editingId ? 'Edit Campaign' : 'Create New Campaign'}</Text>
             {editingId && (
-              <TouchableOpacity onPress={resetForm}><Text style={{color: '#8a94a8'}}>Cancel Edit</Text></TouchableOpacity>
+              <TouchableOpacity onPress={resetForm} style={styles.cancelEditBtn}>
+                <Text style={styles.cancelEditTxt}>Cancel</Text>
+              </TouchableOpacity>
             )}
           </View>
           
-          <TextInput style={styles.input} placeholder="Promo Code (e.g. SUMMER26)" value={newCode} onChangeText={setNewCode} />
-          <TextInput style={styles.input} placeholder="Discount % (e.g. 15)" keyboardType="numeric" value={newDiscount} onChangeText={setNewDiscount} />
-          <TextInput style={styles.input} placeholder="Description (e.g. New Year Special)" value={newDesc} onChangeText={setNewDesc} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>PROMO CODE</Text>
+            <TextInput style={styles.input} placeholder="e.g. SUMMER26" placeholderTextColor="#999" value={newCode} onChangeText={setNewCode} autoCapitalize="characters" />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>DISCOUNT PERCENTAGE (%)</Text>
+            <TextInput style={styles.input} placeholder="e.g. 15" placeholderTextColor="#999" keyboardType="numeric" value={newDiscount} onChangeText={setNewDiscount} />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>DESCRIPTION</Text>
+            <TextInput style={styles.input} placeholder="e.g. New Year Special Offer" placeholderTextColor="#999" value={newDesc} onChangeText={setNewDesc} />
+          </View>
           
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={styles.label}>Start Date</Text>
+              <Text style={styles.inputLabel}>START DATE</Text>
               {Platform.OS === 'web' ? (
-                <input type="date" min={today} style={styles.webDateInput} value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+                <input type="date" min={today} style={webDateInputStyle} value={newStart} onChange={(e) => setNewStart(e.target.value)} />
               ) : (
-                <TextInput style={styles.input} placeholder="YYYY-MM-DD" value={newStart} onChangeText={setNewStart} />
+                <>
+                  <TouchableOpacity style={styles.dateSelector} onPress={() => setShowStartPicker(true)}>
+                    <Text style={[styles.dateText, !newStart && {color: '#999'}]}>{newStart || 'Select Date'}</Text>
+                    <Text style={styles.calendarIcon}>📅</Text>
+                  </TouchableOpacity>
+                  {showStartPicker && (
+                    <DateTimePicker
+                      value={newStart ? new Date(newStart) : new Date()}
+                      mode="date"
+                      display="default"
+                      minimumDate={new Date()}
+                      onChange={(e, d) => onDateChange(e, d, 'start')}
+                    />
+                  )}
+                </>
               )}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>End Date</Text>
+              <Text style={styles.inputLabel}>END DATE</Text>
               {Platform.OS === 'web' ? (
-                <input type="date" min={newStart || today} style={styles.webDateInput} value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
+                <input type="date" min={newStart || today} style={webDateInputStyle} value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
               ) : (
-                <TextInput style={styles.input} placeholder="YYYY-MM-DD" value={newEnd} onChangeText={setNewEnd} />
+                <>
+                  <TouchableOpacity style={styles.dateSelector} onPress={() => setShowEndPicker(true)}>
+                    <Text style={[styles.dateText, !newEnd && {color: '#999'}]}>{newEnd || 'Select Date'}</Text>
+                    <Text style={styles.calendarIcon}>📅</Text>
+                  </TouchableOpacity>
+                  {showEndPicker && (
+                    <DateTimePicker
+                      value={newEnd ? new Date(newEnd) : new Date()}
+                      mode="date"
+                      display="default"
+                      minimumDate={newStart ? new Date(newStart) : new Date()}
+                      onChange={(e, d) => onDateChange(e, d, 'end')}
+                    />
+                  )}
+                </>
               )}
             </View>
           </View>
 
-          <Text style={styles.label}>Promotional Image Post (Optional)</Text>
+          <Text style={styles.inputLabel}>CAMPAIGN IMAGE (OPTIONAL)</Text>
           <View style={styles.imagePickerRow}>
-            {imageUri && (
+            {imageUri ? (
               <View style={styles.previewContainer}>
                 <Image source={{ uri: imageUri }} style={styles.previewImg} />
                 <TouchableOpacity style={styles.removeImgBtn} onPress={() => setImageUri(null)}>
                   <Text style={styles.removeImgTxt}>✕</Text>
                 </TouchableOpacity>
               </View>
-            )}
-            {!imageUri && (
+            ) : (
               <TouchableOpacity style={styles.addImageBtn} onPress={pickImage}>
-                <Text style={styles.addImageTxt}>+ Add Image</Text>
+                <Text style={styles.addImageTxt}>+ Upload Image</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity style={styles.btn} onPress={handleAdd} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#070504" /> : <Text style={styles.btnTxt}>{editingId ? 'Update Offer' : 'Generate Offer'}</Text>}
+            {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTxt}>{editingId ? 'Update Promotion' : 'Create Promotion'}</Text>}
           </TouchableOpacity>
         </View>
 
         {/* List of Promotions */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>🏷️ Active Campaigns</Text>
+          <Text style={styles.cardTitle}>Active Campaigns</Text>
           
           {loading ? (
             <ActivityIndicator size="large" color="#c9a052" />
           ) : promos.length === 0 ? (
-            <Text style={styles.emptyTxt}>No promotions found.</Text>
+            <Text style={styles.emptyTxt}>No active promotions at the moment.</Text>
           ) : (
             promos.map(p => (
               <View key={p._id} style={styles.promoItem}>
-                {p.imageUrl && (
-                  <Image source={{ uri: p.imageUrl }} style={styles.promoListImg} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.promoCode}>{p.code}</Text>
-                  <Text style={styles.promoDesc}>{p.description}</Text>
-                  <Text style={styles.promoDates}>From: {new Date(p.startDate).toLocaleDateString()}  |  Until: {new Date(p.endDate).toLocaleDateString()}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <Text style={styles.promoDiscount}>{p.discountPercent}% OFF</Text>
-                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <View style={styles.promoHeader}>
+                  {p.imageUrl ? (
+                    <Image source={{ uri: p.imageUrl }} style={styles.promoListImg} />
+                  ) : (
+                    <View style={[styles.promoListImg, {backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center'}]}>
+                      <Text style={{fontSize: 20}}>🏷️</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.promoCode}>{p.code}</Text>
+                    <Text style={styles.promoDiscount}>{p.discountPercent}% OFF</Text>
+                  </View>
+                  <View style={styles.actionButtons}>
                     <TouchableOpacity onPress={() => handleEdit(p)} style={styles.editBtn}>
                       <Text style={styles.editTxt}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDelete(p._id)} style={styles.deleteBtn}>
                       <Text style={styles.deleteTxt}>Delete</Text>
                     </TouchableOpacity>
+                  </View>
+                </View>
+                <View style={styles.promoDetails}>
+                  <Text style={styles.promoDesc}>{p.description || "No description provided."}</Text>
+                  <View style={styles.dateBadge}>
+                    <Text style={styles.promoDates}>Valid: {new Date(p.startDate).toLocaleDateString()} — {new Date(p.endDate).toLocaleDateString()}</Text>
                   </View>
                 </View>
               </View>
@@ -280,45 +333,124 @@ const AdminPromotionsScreen = ({ navigation }) => {
   );
 };
 
+const webDateInputStyle = {
+  padding: '12px',
+  borderRadius: '10px',
+  border: '1px solid #ddd',
+  backgroundColor: '#f9f9f9',
+  color: '#333',
+  fontSize: '14px',
+  width: '100%',
+  outline: 'none'
+};
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f0ebe0' },
-  header: { padding: 20, backgroundColor: '#f0ebe0', flexDirection: 'row', alignItems: 'center' },
-  backBtnTxt: { color: '#c9a052', fontWeight: 'bold', fontSize: 14 },
+  safe: { flex: 1, backgroundColor: '#f5f7fa' },
+  header: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 15, 
+    backgroundColor: '#ffffff', 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  backBtnTxt: { color: '#c9a052', fontWeight: '600', fontSize: 14 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: '#111318', marginRight: 40 },
   
-  scrollContent: { padding: 20 },
-  card: { backgroundColor: '#111318', borderRadius: 16, padding: 20, marginBottom: 20 },
-  cardTitle: { color: '#c9a052', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+  scrollContent: { padding: 15 },
+  card: { 
+    backgroundColor: '#ffffff', 
+    borderRadius: 20, 
+    padding: 20, 
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3
+  },
+  cardTitle: { color: '#1a1c24', fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  cancelEditBtn: { padding: 5 },
+  cancelEditTxt: { color: '#ff4444', fontWeight: '600' },
   
-  input: { backgroundColor: '#1e212a', color: '#fff', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#2b2f3a' },
-  webDateInput: { padding: '15px', borderRadius: '10px', border: '1px solid #2b2f3a', backgroundColor: '#1e212a', color: '#fff', fontSize: '14px', width: '100%' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
-  label: { color: '#8a94a8', fontSize: 12, marginBottom: 5 },
+  inputGroup: { marginBottom: 15 },
+  inputLabel: { color: '#7f8c8d', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 0.5 },
+  input: { 
+    backgroundColor: '#f9f9f9', 
+    color: '#333', 
+    padding: 12, 
+    borderRadius: 10, 
+    borderWidth: 1, 
+    borderColor: '#eee',
+    fontSize: 14
+  },
   
-  btn: { backgroundColor: '#c9a052', padding: 15, borderRadius: 10, alignItems: 'center' },
-  btnTxt: { color: '#070504', fontWeight: 'bold', fontSize: 16 },
+  dateSelector: {
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  dateText: { color: '#333', fontSize: 14 },
+  calendarIcon: { fontSize: 16 },
+  
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  
+  btn: { backgroundColor: '#c9a052', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
+  btnTxt: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
 
-  emptyTxt: { color: '#8a94a8', textAlign: 'center', marginTop: 10 },
+  emptyTxt: { color: '#95a5a6', textAlign: 'center', marginTop: 20, fontSize: 14 },
   
-  promoItem: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#2b2f3a', paddingVertical: 15, alignItems: 'center' },
-  promoListImg: { width: 60, height: 60, borderRadius: 8, marginRight: 15 },
-  promoCode: { color: '#fff', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
-  promoDesc: { color: '#8a94a8', fontSize: 12, marginVertical: 4 },
-  promoDates: { color: '#c9a052', fontSize: 11 },
-  promoDiscount: { color: '#c9a052', fontSize: 18, fontWeight: '900' },
-  editBtn: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#2b2f3a', borderRadius: 5 },
-  editTxt: { color: '#fff', fontSize: 11 },
-  deleteBtn: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(239, 68, 68, 0.2)', borderRadius: 5 },
-  deleteTxt: { color: '#EF4444', fontWeight: 'bold', fontSize: 11 },
+  promoItem: { 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f0f0f0', 
+    paddingVertical: 20
+  },
+  promoHeader: { flexDirection: 'row', alignItems: 'center' },
+  promoListImg: { width: 50, height: 50, borderRadius: 12, marginRight: 15 },
+  promoCode: { color: '#1a1c24', fontSize: 16, fontWeight: 'bold' },
+  promoDiscount: { color: '#c9a052', fontSize: 14, fontWeight: 'bold' },
   
-  // Image UI
-  imagePickerRow: { flexDirection: 'row', marginBottom: 15, marginTop: 5 },
-  previewContainer: { position: 'relative', width: 100, height: 100 },
-  previewImg: { width: '100%', height: '100%', borderRadius: 10 },
-  removeImgBtn: { position: 'absolute', top: -5, right: -5, backgroundColor: '#EF4444', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  removeImgTxt: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  addImageBtn: { backgroundColor: '#1e212a', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#2b2f3a', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', width: '100%', height: 80 },
-  addImageTxt: { color: '#8a94a8', fontWeight: 'bold' },
+  actionButtons: { flexDirection: 'row' },
+  editBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#f0f0f0', borderRadius: 8, marginRight: 8 },
+  editTxt: { color: '#555', fontSize: 12, fontWeight: '600' },
+  deleteBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#fff0f0', borderRadius: 8 },
+  deleteTxt: { color: '#ff4444', fontWeight: '600', fontSize: 12 },
+  
+  promoDetails: { marginTop: 12 },
+  promoDesc: { color: '#7f8c8d', fontSize: 13, lineHeight: 18 },
+  dateBadge: { 
+    backgroundColor: '#f5f7fa', 
+    alignSelf: 'flex-start', 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    borderRadius: 6, 
+    marginTop: 8 
+  },
+  promoDates: { color: '#95a5a6', fontSize: 11, fontWeight: '500' },
+  
+  imagePickerRow: { flexDirection: 'row', marginBottom: 20, marginTop: 5 },
+  previewContainer: { position: 'relative', width: '100%', height: 150 },
+  previewImg: { width: '100%', height: '100%', borderRadius: 15 },
+  removeImgBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(255,255,255,0.9)', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.2, shadowRadius: 3 },
+  removeImgTxt: { color: '#ff4444', fontSize: 14, fontWeight: 'bold' },
+  addImageBtn: { 
+    backgroundColor: '#f9f9f9', 
+    borderRadius: 15, 
+    borderWidth: 1, 
+    borderColor: '#ddd', 
+    borderStyle: 'dashed', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    width: '100%', 
+    height: 100 
+  },
+  addImageTxt: { color: '#c9a052', fontWeight: '600' },
 });
 
 export default AdminPromotionsScreen;

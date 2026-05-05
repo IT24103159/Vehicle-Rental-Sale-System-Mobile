@@ -14,7 +14,10 @@ import {
   Alert,
 } from 'react-native';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 import SearchBar from '../components/SearchBar';
+import VehicleCard from '../components/VehicleCard';
+import CustomPicker from '../components/CustomPicker';
 
 const BuyGalleryScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
@@ -66,20 +69,12 @@ const BuyGalleryScreen = ({ navigation }) => {
   const applyFilters = () => {
     // Validation for negative values
     if (maxMileage && parseFloat(maxMileage) < 0) {
-      if (Platform.OS === 'web') {
-        window.alert('Invalid Mileage: Max mileage cannot be negative.');
-      } else {
-        Alert.alert('Invalid Mileage', 'Max mileage cannot be negative.');
-      }
+      showAlert('Invalid Mileage', 'Max mileage cannot be negative.');
       return;
     }
 
     if (maxPrice && parseFloat(maxPrice) < 0) {
-      if (Platform.OS === 'web') {
-        window.alert('Invalid Price: Max price cannot be negative.');
-      } else {
-        Alert.alert('Invalid Price', 'Max price cannot be negative.');
-      }
+      showAlert('Invalid Price', 'Max price cannot be negative.');
       return;
     }
 
@@ -167,26 +162,34 @@ const BuyGalleryScreen = ({ navigation }) => {
                 </View>
 
                 {/* Condition Select */}
-                <Text style={styles.label}>CONDITION</Text>
-                <select style={styles.webSelect} value={condition} onChange={e => setCondition(e.target.value)}>
-                  <option value="All">All Conditions</option>
-                  <option value="Brand New">Brand New</option>
-                  <option value="Registered">Registered</option>
-                  <option value="Reconditioned">Reconditioned</option>
-                </select>
+                <CustomPicker 
+                  label="CONDITION"
+                  value={condition}
+                  onValueChange={setCondition}
+                  options={[
+                    { label: 'All Conditions', value: 'All' },
+                    { label: 'Brand New', value: 'Brand New' },
+                    { label: 'Registered', value: 'Registered' },
+                    { label: 'Reconditioned', value: 'Reconditioned' },
+                  ]}
+                />
 
                 {/* Row 3: Transmission & Mileage */}
                 <View style={styles.row}>
                   <View style={styles.col}>
-                    <Text style={styles.label}>TRANSMISSION</Text>
-                    <select style={styles.webSelect} value={transmission} onChange={e => setTransmission(e.target.value)}>
-                      <option value="Any">Any</option>
-                      <option value="Auto">Auto</option>
-                      <option value="Manual">Manual</option>
-                      <option value="Tiptronic">Tiptronic</option>
-                    </select>
+                    <CustomPicker 
+                      label="TRANSMISSION"
+                      value={transmission}
+                      onValueChange={setTransmission}
+                      options={[
+                        { label: 'Any', value: 'Any' },
+                        { label: 'Auto', value: 'Auto' },
+                        { label: 'Manual', value: 'Manual' },
+                        { label: 'Tiptronic', value: 'Tiptronic' },
+                      ]}
+                    />
                   </View>
-                  <View style={styles.col}>
+                  <View style={[styles.col, { marginLeft: 10 }]}>
                     <Text style={styles.label}>MAX MILEAGE</Text>
                     <TextInput style={styles.sidebarInput} placeholder="km" placeholderTextColor="#555" keyboardType="numeric" value={maxMileage} onChangeText={setMaxMileage} />
                   </View>
@@ -261,7 +264,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 15,
     backgroundColor: '#f0ebe0',
-    gap: 12,
+    marginTop: 12,
     alignItems: 'center'
   },
   searchBar: {
@@ -315,7 +318,7 @@ const styles = StyleSheet.create({
   filterHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
   filterTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
   
-  row: { flexDirection: 'row', gap: 15, marginBottom: 15 },
+  row: { flexDirection: 'row', marginBottom: 15 },
   col: { flex: 1 },
   label: { color: '#888', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 },
   sidebarInput: { 
@@ -338,7 +341,7 @@ const styles = StyleSheet.create({
     marginBottom: 15
   },
   
-  actionRow: { flexDirection: 'row', marginTop: 25, gap: 15, alignItems: 'center' },
+  actionRow: { flexDirection: 'row', marginTop: 25, alignItems: 'center' },
   applyBtn: { 
     flex: 2, 
     backgroundColor: '#c9a052', 
@@ -372,7 +375,7 @@ const styles = StyleSheet.create({
   cardInfo: { padding: 15 },
   vTitle: { fontSize: 16, fontWeight: 'bold', color: '#111318' },
   vPrice: { fontSize: 14, color: '#c9a052', fontWeight: 'bold', marginVertical: 5 },
-  specs: { flexDirection: 'row', gap: 15, marginBottom: 15 },
+  specs: { flexDirection: 'row', marginBottom: 15 },
   specItem: { fontSize: 11, color: '#666' },
   inquireBtn: { backgroundColor: '#111318', padding: 12, borderRadius: 8, alignItems: 'center' },
   inquireBtnTxt: { color: '#fff', fontWeight: 'bold', fontSize: 12 },

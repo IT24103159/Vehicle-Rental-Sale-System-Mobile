@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: 20, marginBottom: 25 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#111318', marginBottom: 15 },
 
-  menuGrid: { gap: 12 },
+  menuGrid: { marginBottom: 12 },
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',

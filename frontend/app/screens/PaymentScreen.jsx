@@ -7,13 +7,15 @@ import {
   SafeAreaView,
   StatusBar,
   TouchableOpacity,
-  Alert,
   Image,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const PaymentScreen = ({ route, navigation }) => {
   const { bookingId, totalCost, vehicleName } = route?.params || {};
@@ -30,7 +32,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     if (!bookingId) {
-      Alert.alert('Error', 'No booking information found.');
+      showAlert('Error', 'No booking information found.');
       navigation.goBack();
     }
   }, [bookingId]);
@@ -47,13 +49,47 @@ const PaymentScreen = ({ route, navigation }) => {
     setShowPicker(true);
   };
 
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setBankSlipFile({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType,
+        });
+        
+        if (file.mimeType && file.mimeType.startsWith('image/')) {
+          setPreviewUrl(file.uri);
+        } else {
+          setPreviewUrl('');
+        }
+      }
+    } catch (err) {
+      showAlert('Error', 'Failed to pick document');
+    }
+  };
+
+  const openScanReport = () => {
+    if (vehicle?.scanReportUrl) {
+      const url = vehicle.scanReportUrl.startsWith('http') 
+        ? vehicle.scanReportUrl 
+        : `${getAssetsBaseUrl()}${vehicle.scanReportUrl}`;
+      Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
       if (!allowedTypes.includes(file.type)) {
-         if (Platform.OS === 'web') window.alert("Only PDF, JPEG, and PNG files are allowed.");
-         else Alert.alert('Error', "Only PDF, JPEG, and PNG files are allowed.");
+         showAlert('Error', "Only PDF, JPEG, and PNG files are allowed.");
          e.target.value = null;
          return;
       }
@@ -62,14 +98,14 @@ const PaymentScreen = ({ route, navigation }) => {
       if (file.type.startsWith('image/')) {
         setPreviewUrl(URL.createObjectURL(file));
       } else {
-        setPreviewUrl(''); // For PDF etc.
+        setPreviewUrl(''); 
       }
     }
   };
 
   const handleUploadPayment = async () => {
     if (!bankSlipFile) {
-      Alert.alert('Validation', 'Please browse and select a Bank Slip (PDF/JPG/PNG).');
+      showAlert('Validation', 'Please browse and select a Bank Slip (PDF/JPG/PNG).');
       return;
     }
 
@@ -79,29 +115,28 @@ const PaymentScreen = ({ route, navigation }) => {
       formData.append('bookingId', bookingId);
       formData.append('amount', totalCost);
       formData.append('paymentDate', paymentDate);
-      formData.append('bankSlip', bankSlipFile);
+
+      if (Platform.OS === 'web') {
+        formData.append('bankSlip', bankSlipFile);
+      } else {
+        formData.append('bankSlip', {
+          uri: Platform.OS === 'ios' ? bankSlipFile.uri.replace('file://', '') : bankSlipFile.uri,
+          name: bankSlipFile.name || 'slip.jpg',
+          type: bankSlipFile.type || 'image/jpeg'
+        });
+      }
 
       await api.post('/payments/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (Platform.OS === 'web') {
-        window.alert('Payment Uploaded Successfully! Your booking will be confirmed after admin approval.');
-        navigation.navigate('HomeTab', { screen: 'HomeMain' });
-      } else {
-        Alert.alert(
-          'Success', 
-          'Payment Uploaded Successfully! Your booking will be confirmed after admin approval.', 
-          [
-            { 
-              text: 'OK', 
-              onPress: () => navigation.navigate('HomeTab', { screen: 'HomeMain' }) 
-            }
-          ]
-        );
-      }
+      showAlert(
+        'Success', 
+        'Payment Uploaded Successfully! Your booking will be confirmed after admin approval.',
+        () => navigation.navigate('HomeTab', { screen: 'HomeMain' })
+      );
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to upload payment.');
+      showAlert('Error', error.response?.data?.message || 'Failed to upload payment.');
     } finally {
       setLoading(false);
     }
@@ -112,33 +147,25 @@ const PaymentScreen = ({ route, navigation }) => {
       setCancelling(true);
       try {
         await api.delete(`/bookings/${bookingId}`);
-        if (Platform.OS === 'web') {
-          window.alert('Your booking has been cancelled successfully.');
-          navigation.navigate('DashboardTab');
-        } else {
-          Alert.alert('Cancelled', 'Your booking has been cancelled successfully.', [
-            { text: 'OK', onPress: () => navigation.navigate('DashboardTab') }
-          ]);
-        }
+        console.log('Booking deleted successfully:', bookingId);
+        showAlert('Cancelled', 'Your booking has been cancelled successfully.', () => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'HomeTab' }],
+          });
+        });
       } catch (error) {
-        Alert.alert('Error', error.response?.data?.message || 'Failed to cancel booking.');
+        showAlert('Error', error.response?.data?.message || 'Failed to cancel booking.');
       } finally {
         setCancelling(false);
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to cancel this booking?')) confirmCancel();
-    } else {
-      Alert.alert(
-        'Cancel Booking',
-        'Are you sure you want to cancel this booking? This action cannot be undone.',
-        [
-          { text: 'No, Keep it', style: 'cancel' },
-          { text: 'Yes, Cancel', style: 'destructive', onPress: confirmCancel }
-        ]
-      );
-    }
+    showConfirm(
+      'Cancel Booking',
+      'Are you sure you want to cancel this booking? This action cannot be undone.',
+      confirmCancel
+    );
   };
 
   return (
@@ -203,17 +230,26 @@ const PaymentScreen = ({ route, navigation }) => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>UPLOAD BANK SLIP (PDF / JPG / PNG)</Text>
-            <input
-              type="file"
-              accept=".pdf, image/jpeg, image/png"
-              style={styles.webFileInput}
-              onChange={handleFileChange}
-            />
+            {Platform.OS === 'web' ? (
+              <input
+                type="file"
+                accept=".pdf, image/jpeg, image/png"
+                style={styles.webFileInput}
+                onChange={handleFileChange}
+              />
+            ) : (
+              <TouchableOpacity style={styles.uploadBtn} onPress={pickDocument}>
+                <Text style={styles.uploadBtnTxt}>
+                  {bankSlipFile ? 'Change Bank Slip' : 'Select Bank Slip'}
+                </Text>
+                <Text>📎</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {previewUrl ? (
             <Image source={{ uri: previewUrl }} style={styles.previewImg} />
-          ) : bankSlipFile && bankSlipFile.type === 'application/pdf' ? (
+          ) : bankSlipFile && (bankSlipFile.type === 'application/pdf' || bankSlipFile.name?.endsWith('.pdf')) ? (
             <View style={styles.pdfPreview}>
               <Text style={styles.pdfTxt}>📄 Selected: {bankSlipFile.name}</Text>
             </View>
@@ -271,7 +307,10 @@ const styles = StyleSheet.create({
   submitBtn: { backgroundColor: '#c9a052', padding: 16, borderRadius: 10, alignItems: 'center' },
   submitBtnTxt: { color: '#111318', fontWeight: 'bold', fontSize: 16 },
 
-  cancelBtn: { padding: 16, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#ef4444', backgroundColor: '#fff' },
+  uploadBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fdfbf7', borderStyle: 'dashed', borderWidth: 1, borderColor: '#c9a052', borderRadius: 8, padding: 15 },
+  uploadBtnTxt: { fontSize: 14, color: '#111318', fontWeight: 'bold' },
+
+  cancelBtn: { padding: 16, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#ef4444', backgroundColor: '#fff', marginTop: 10 },
   cancelBtnTxt: { color: '#ef4444', fontWeight: 'bold', fontSize: 14 },
 });
 

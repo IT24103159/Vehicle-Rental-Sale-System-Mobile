@@ -8,7 +8,6 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   Platform,
@@ -17,6 +16,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const AdminPaymentsScreen = ({ navigation }) => {
   const [payments, setPayments] = useState([]);
@@ -37,11 +37,10 @@ const AdminPaymentsScreen = ({ navigation }) => {
     try {
       setProcessingId(id);
       await api.put(`/payments/${id}`, { paymentDate: newDate });
-      if (Platform.OS === 'web') window.alert('Payment date updated successfully.');
-      else Alert.alert('Success', 'Payment date updated successfully.');
+      showAlert('Success', 'Payment date updated successfully.');
       fetchPayments();
     } catch (error) {
-      Alert.alert('Error', 'Failed to update payment date.');
+      showAlert('Error', 'Failed to update payment date.');
     } finally {
       setProcessingId(null);
       setShowWebDatePicker(null);
@@ -69,7 +68,7 @@ const AdminPaymentsScreen = ({ navigation }) => {
       const response = await api.get('/payments');
       setPayments(response.data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load payments.');
+      showAlert('Error', 'Failed to load payments.');
     } finally {
       setLoading(false);
     }
@@ -81,46 +80,29 @@ const AdminPaymentsScreen = ({ navigation }) => {
       const remarks = newStatus === 'Rejected' ? 'Insufficient Amount / Invalid Slip' : 'Payment verified';
       await api.put(`/payments/${id}`, { status: newStatus, remarks });
       
-      if (Platform.OS === 'web') {
-        window.alert(`Success: Payment has been ${newStatus.toLowerCase()}.`);
-      } else {
-        Alert.alert('Success', `Payment has been ${newStatus.toLowerCase()}.`);
-      }
+      showAlert('Success', `Payment has been ${newStatus.toLowerCase()}.`);
       fetchPayments(); // Refresh list
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Failed to update status';
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + errorMsg);
-      } else {
-        Alert.alert('Error', errorMsg);
-      }
+      showAlert('Error', errorMsg);
     } finally {
       setProcessingId(null);
     }
   };
 
   const confirmAction = (id, newStatus) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Are you sure you want to mark this payment as ${newStatus}?`)) {
-        handleStatusUpdate(id, newStatus);
-      }
-    } else {
-      Alert.alert(
-        `${newStatus} Payment`,
-        `Are you sure you want to mark this payment as ${newStatus}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Yes, Proceed', onPress: () => handleStatusUpdate(id, newStatus) }
-        ]
-      );
-    }
+    showConfirm(
+      `${newStatus} Payment`,
+      `Are you sure you want to mark this payment as ${newStatus}?`,
+      () => handleStatusUpdate(id, newStatus)
+    );
   };
 
   const getFileUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    // Assuming backend runs on localhost:5000. Adjust if needed.
-    return `http://localhost:5000${url}`;
+    const { getAssetsBaseUrl } = require('../../services/api');
+    return `${getAssetsBaseUrl()}${url}`;
   };
 
   const handleViewSlip = (url) => {
@@ -135,7 +117,7 @@ const AdminPaymentsScreen = ({ navigation }) => {
         window.open(fullUrl, '_blank');
       } else {
         Linking.openURL(fullUrl).catch(err => {
-          Alert.alert('Error', 'Could not open PDF. Please ensure a PDF viewer is installed.');
+          showAlert('Error', 'Could not open PDF. Please ensure a PDF viewer is installed.');
         });
       }
     } else {
@@ -189,7 +171,7 @@ const AdminPaymentsScreen = ({ navigation }) => {
                   <Text style={styles.dateTxt}>Paid On: {new Date(p.paymentDate).toLocaleDateString()}</Text>
                   <Text style={styles.amountTxt}>Amount: Rs. {p.amount?.toLocaleString()}</Text>
                   
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flexDirection: 'row', marginTop: 10 }}>
                     <TouchableOpacity 
                       style={styles.viewSlipBtn}
                       onPress={() => handleViewSlip(p.bankSlipUrl)}
@@ -300,7 +282,7 @@ const styles = StyleSheet.create({
   viewSlipBtn: { alignSelf: 'flex-start', backgroundColor: '#f8f9fa', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#ddd', marginTop: 10 },
   viewSlipTxt: { fontSize: 12, color: '#111318', fontWeight: 'bold' },
 
-  actionsRow: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 },
+  actionsRow: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 },
   actionBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   approveBtn: { backgroundColor: '#111318' },
   approveTxt: { color: '#fff', fontWeight: 'bold', fontSize: 13 },

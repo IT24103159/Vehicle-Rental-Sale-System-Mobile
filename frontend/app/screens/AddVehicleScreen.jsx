@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, 
-  SafeAreaView, StatusBar, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image 
+  SafeAreaView, StatusBar, ActivityIndicator, KeyboardAvoidingView, Platform, Image 
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 
 const AddVehicleScreen = ({ route, navigation }) => {
   const isEditing = !!route?.params?.vehicle;
@@ -52,7 +53,7 @@ const AddVehicleScreen = ({ route, navigation }) => {
       }
     } catch (error) {
       console.log('Error picking document', error);
-      Alert.alert("Error", "Could not pick PDF document.");
+      showAlert("Error", "Could not pick PDF document.");
     }
   };
 
@@ -81,12 +82,8 @@ const AddVehicleScreen = ({ route, navigation }) => {
     scanReportUrl: vehicle.scanReportUrl || '', description: vehicle.description || ''
   });
 
-  const showAlert = (title, msg) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}: ${msg}`);
-    } else {
-      Alert.alert(title, msg);
-    }
+  const doAlert = (title, msg) => {
+    showAlert(title, msg);
   };
 
   const validateForm = (data) => {
@@ -100,13 +97,13 @@ const AddVehicleScreen = ({ route, navigation }) => {
     for (const field of fieldsToCheck) {
       if (data[field] === undefined || data[field] === null || data[field].toString().trim() === '') {
         const fieldLabel = field.replace(/([A-Z])/g, ' $1').toUpperCase();
-        showAlert('Missing Field', `Please enter the ${fieldLabel}.`);
+        doAlert('Missing Field', `Please enter the ${fieldLabel}.`);
         return false;
       }
     }
 
     if (selectedImages.length === 0) {
-      showAlert('Missing Image', 'Please provide at least one vehicle image.');
+      doAlert('Missing Image', 'Please provide at least one vehicle image.');
       return false;
     }
 
@@ -116,7 +113,7 @@ const AddVehicleScreen = ({ route, navigation }) => {
 
     for (const field of numericFields) {
       if (data[field] !== '' && (isNaN(Number(data[field])) || Number(data[field]) < 0)) {
-        showAlert('Invalid Value', `${field.toUpperCase()} must be a valid positive number.`);
+        doAlert('Invalid Value', `${field.toUpperCase()} must be a valid positive number.`);
         return false;
       }
     }
@@ -195,23 +192,14 @@ const AddVehicleScreen = ({ route, navigation }) => {
       }
 
       setLoading(false);
-      if (Platform.OS === 'web') {
-        window.alert(`Success: Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`);
+      showAlert('Success', `Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`, () => {
         navigation.navigate('DashboardTab', { screen: 'AdminHome' });
-      } else {
-        Alert.alert('Success', `Vehicle ${isEditing ? 'updated' : 'saved'} successfully!`, [
-          { text: 'OK', onPress: () => navigation.navigate('DashboardTab', { screen: 'AdminHome' }) }
-        ]);
-      }
+      });
       
     } catch (error) {
       setLoading(false);
       console.error('Save Error:', error.response?.data || error.message);
-      if (Platform.OS === 'web') {
-        window.alert('Error: ' + (error.response?.data?.message || 'Failed to save vehicle'));
-      } else {
-        Alert.alert('Error', error.response?.data?.message || 'Failed to save vehicle');
-      }
+      showAlert('Error', error.response?.data?.message || 'Failed to save vehicle');
     }
   };
 
@@ -433,7 +421,7 @@ const styles = StyleSheet.create({
   infoHint: { fontSize: 10, color: '#c9a052', marginTop: 5, textAlign: 'center' },
   sectionDivider: { fontSize: 11, fontWeight: 'bold', color: '#c9a052', marginBottom: 15, letterSpacing: 1 },
   
-  tabContainer: { flexDirection: 'row', padding: 15, gap: 10 },
+  tabContainer: { flexDirection: 'row', padding: 15 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: '#ddd' },
   activeTab: { backgroundColor: '#111318' },
   tabTxt: { fontSize: 11, fontWeight: 'bold', color: '#666' },
@@ -454,7 +442,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 10, fontWeight: 'bold', color: '#c9a052', marginBottom: 6 },
   input: { backgroundColor: '#f8f9fa', borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 10, fontSize: 13 },
   
-  pickerContainer: { flexDirection: 'row', gap: 5 },
+  pickerContainer: { flexDirection: 'row' },
   optBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: '#ddd' },
   optBtnActive: { backgroundColor: '#111318', borderColor: '#111318' },
   optBtnTxt: { fontSize: 11, color: '#666' },

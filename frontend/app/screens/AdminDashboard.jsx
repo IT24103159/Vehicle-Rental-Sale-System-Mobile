@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   /* Actions */
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#0f1117', marginBottom: 16 },
-  actionsGrid: { gap: 12 },
+  actionsGrid: { marginBottom: 12 },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',

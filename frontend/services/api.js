@@ -14,6 +14,11 @@ const getBaseUrl = () => {
   return 'https://vehicle-rental-sale-system-mobile.onrender.com/api';
 };
 
+export const getAssetsBaseUrl = () => {
+  const apiBase = getBaseUrl();
+  return apiBase.replace('/api', '');
+};
+
 const api = axios.create({
   baseURL: getBaseUrl(),
   headers: { 'Content-Type': 'application/json' },

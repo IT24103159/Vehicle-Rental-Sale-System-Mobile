@@ -12,6 +12,8 @@ import {
   Platform,
 } from 'react-native';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
+import CustomPicker from '../components/CustomPicker';
 
 const AdminBookingsScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
@@ -28,7 +30,7 @@ const AdminBookingsScreen = ({ navigation }) => {
       setBookings(res.data);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to fetch bookings');
+      showAlert('Error', 'Failed to fetch bookings');
     } finally {
       setLoading(false);
     }
@@ -38,9 +40,9 @@ const AdminBookingsScreen = ({ navigation }) => {
     try {
       await api.put(`/bookings/admin/status/${id}`, { bookingStatus: status });
       fetchBookings(); // Refresh data
-      Alert.alert('Success', `Booking status updated to ${status}`);
+      showAlert('Success', `Booking status updated to ${status}`);
     } catch (err) {
-      Alert.alert('Error', 'Failed to update status');
+      showAlert('Error', 'Failed to update status');
     }
   };
 
@@ -49,34 +51,17 @@ const AdminBookingsScreen = ({ navigation }) => {
       try {
         await api.delete(`/bookings/admin/${id}`);
         setBookings(bookings.filter(b => b._id !== id));
-        if (Platform.OS === 'web') {
-          window.alert('Booking record has been removed.');
-        } else {
-          Alert.alert('Deleted', 'Booking record has been removed.');
-        }
+        showAlert('Deleted', 'Booking record has been removed.');
       } catch (err) {
-        if (Platform.OS === 'web') {
-          window.alert('Failed to delete booking');
-        } else {
-          Alert.alert('Error', 'Failed to delete booking');
-        }
+        showAlert('Error', 'Failed to delete booking');
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete this booking record?')) {
-        confirmDelete();
-      }
-    } else {
-      Alert.alert(
-        'Confirm Delete',
-        'Are you sure you want to delete this booking record?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: confirmDelete }
-        ]
-      );
-    }
+    showConfirm(
+      'Confirm Delete',
+      'Are you sure you want to delete this booking record?',
+      confirmDelete
+    );
   };
 
   const getStatusColor = (status) => {
@@ -141,26 +126,21 @@ const AdminBookingsScreen = ({ navigation }) => {
                   </View>
                   <Text style={[styles.cell, styles.mainTxt, { width: 100 }]}>Rs.{b.totalCost?.toLocaleString()}</Text>
                   
-                  <View style={[styles.cell, { width: 150 }]}>
-                    <select 
-                      style={{ 
-                        backgroundColor: getStatusColor(b.bookingStatus), 
-                        color: '#fff', 
-                        padding: 5, 
-                        borderRadius: 5,
-                        border: 'none'
-                      }}
+                  <View style={[styles.cell, { width: 180 }]}>
+                    <CustomPicker 
                       value={b.bookingStatus}
-                      onChange={(e) => handleUpdateStatus(b._id, e.target.value)}
-                    >
-                      <option value="Pending Payment">Pending Payment</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                      onValueChange={(v) => handleUpdateStatus(b._id, v)}
+                      options={[
+                        { label: 'Pending Payment', value: 'Pending Payment' },
+                        { label: 'Confirmed', value: 'Confirmed' },
+                        { label: 'Completed', value: 'Completed' },
+                        { label: 'Cancelled', value: 'Cancelled' },
+                      ]}
+                      style={{ marginBottom: 0 }}
+                    />
                   </View>
 
-                  <View style={[styles.cell, { width: 120, flexDirection: 'row', gap: 10 }]}>
+                  <View style={[styles.cell, { width: 120, flexDirection: 'row' }]}>
                     <TouchableOpacity onPress={() => handleDelete(b._id)} style={styles.deleteBtn}>
                       <Text style={styles.deleteBtnTxt}>Delete</Text>
                     </TouchableOpacity>

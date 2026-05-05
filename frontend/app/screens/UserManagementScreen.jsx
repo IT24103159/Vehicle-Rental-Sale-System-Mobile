@@ -10,10 +10,10 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
-  Alert,
   Modal,
 } from 'react-native';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const UserManagementScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
@@ -44,7 +44,7 @@ const UserManagementScreen = ({ navigation }) => {
       calculateStats(data);
     } catch (error) {
       console.error('Fetch users error:', error);
-      Alert.alert('Error', 'Failed to load users');
+      showAlert('Error', 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -103,9 +103,9 @@ const UserManagementScreen = ({ navigation }) => {
       await api.put(`/users/${editUser._id}`, updateData);
       setEditModalVisible(false);
       fetchUsers();
-      Alert.alert('Success', 'User account updated successfully');
+      showAlert('Success', 'User account updated successfully');
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to update user');
+      showAlert('Error', error.response?.data?.message || 'Failed to update user');
     } finally {
       setSaving(false);
     }
@@ -119,19 +119,12 @@ const UserManagementScreen = ({ navigation }) => {
         .then(() => {
           setEditModalVisible(false);
           fetchUsers();
-          Alert.alert('Success', 'User deleted');
+          showAlert('Success', 'User deleted');
         })
-        .catch(() => Alert.alert('Error', 'Failed to delete user'));
+        .catch(() => showAlert('Error', 'Failed to delete user'));
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Are you sure you want to delete ${editUser.fullName}?`)) confirmDelete();
-    } else {
-      Alert.alert('Confirm Delete', `Permanently delete ${editUser.fullName}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: confirmDelete }
-      ]);
-    }
+    showConfirm('Confirm Delete', `Permanently delete ${editUser.fullName}?`, confirmDelete);
   };
 
   const handleToggleBlock = async (userId) => {
@@ -139,7 +132,7 @@ const UserManagementScreen = ({ navigation }) => {
       await api.put(`/users/${userId}/block`);
       fetchUsers();
     } catch (error) {
-      Alert.alert('Error', 'Failed to update user status');
+      showAlert('Error', 'Failed to update user status');
     }
   };
 
@@ -232,7 +225,7 @@ const UserManagementScreen = ({ navigation }) => {
                     <Text style={styles.statusTxt}>• {u.status}</Text>
                   </View>
                 </View>
-                <View style={[styles.td, { width: 120, flexDirection: 'row', justifyContent: 'center', gap: 8 }]}>
+                <View style={[styles.td, { width: 120, flexDirection: 'row', justifyContent: 'center' }]}>
                   <TouchableOpacity 
                     onPress={() => handleToggleBlock(u._id)}
                     style={styles.actionBtn}
@@ -250,16 +243,9 @@ const UserManagementScreen = ({ navigation }) => {
                       const confirmDelete = () => {
                         api.delete(`/users/${u._id}`)
                           .then(() => fetchUsers())
-                          .catch(() => Alert.alert('Error', 'Failed to delete user'));
+                          .catch(() => showAlert('Error', 'Failed to delete user'));
                       };
-                      if (Platform.OS === 'web') {
-                        if (window.confirm(`Delete ${u.fullName}?`)) confirmDelete();
-                      } else {
-                        Alert.alert('Confirm', `Delete ${u.fullName}?`, [
-                          { text: 'Cancel', style: 'cancel' },
-                          { text: 'Delete', style: 'destructive', onPress: confirmDelete }
-                        ]);
-                      }
+                      showConfirm('Confirm', `Delete ${u.fullName}?`, confirmDelete);
                     }}
                     style={[styles.actionBtn, { borderColor: '#ffcdd2' }]}
                   >
@@ -399,7 +385,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: 'bold', color: '#0f1117' },
   subtitle: { fontSize: 13, color: '#6c757d', marginTop: 4 },
 
-  statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 25 },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 25 },
   statCard: {
     flex: 1,
     backgroundColor: '#ffffff',
@@ -407,6 +393,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    marginRight: 10,
   },
   statLabel: { fontSize: 10, fontWeight: 'bold', color: '#6c757d', marginBottom: 5 },
   statValue: { fontSize: 24, fontWeight: 'bold', color: '#0f1117' },
@@ -446,8 +433,8 @@ const styles = StyleSheet.create({
   closeBtn: { fontSize: 22, color: '#888' },
 
   modalForm: { width: '100%' },
-  formRow: { flexDirection: 'row', gap: 15, marginBottom: 20 },
-  formCol: { flex: 1 },
+  formRow: { flexDirection: 'row', marginBottom: 20 },
+  formCol: { flex: 1, marginRight: 10 },
   formLabel: { fontSize: 10, fontWeight: 'bold', color: '#c9a052', marginBottom: 8, letterSpacing: 0.5 },
   formInput: {
     backgroundColor: '#f8f9fa',
@@ -460,8 +447,8 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {},
 
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 25, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  deleteBtn: { paddingVertical: 14, paddingHorizontal: 24, borderRadius: 8, borderWidth: 1, borderColor: '#ef4444' },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 25, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  deleteBtn: { paddingVertical: 14, paddingHorizontal: 24, borderRadius: 8, borderWidth: 1, borderColor: '#ef4444', marginRight: 12 },
   deleteBtnTxt: { color: '#ef4444', fontWeight: 'bold', fontSize: 14 },
   saveBtn: { backgroundColor: '#111318', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 8 },
   saveBtnTxt: { color: '#fff', fontWeight: 'bold', fontSize: 14 },

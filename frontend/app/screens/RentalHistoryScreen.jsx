@@ -8,13 +8,13 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   TextInput,
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const RentalHistoryScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
@@ -49,7 +49,7 @@ const RentalHistoryScreen = ({ navigation }) => {
       setUserReviews(reviewsRes.data || []);
     } catch (error) {
       console.log('Fetch error:', error);
-      Alert.alert('Error', 'Failed to load your rental history.');
+      showAlert('Error', 'Failed to load your rental history.');
     } finally {
       setLoading(false);
     }
@@ -76,26 +76,18 @@ const RentalHistoryScreen = ({ navigation }) => {
       try {
         await api.delete(`/reviews/${id}`);
         setUserReviews(userReviews.filter(r => r._id !== id));
-        if (Platform.OS === 'web') window.alert('Review deleted');
-        else Alert.alert('Deleted', 'Review deleted successfully');
+        showAlert('Deleted', 'Review deleted successfully');
       } catch (err) {
-        Alert.alert('Error', 'Failed to delete review');
+        showAlert('Error', 'Failed to delete review');
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete this review?')) performDelete();
-    } else {
-      Alert.alert('Delete Review', 'Are you sure?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: performDelete }
-      ]);
-    }
+    showConfirm('Delete Review', 'Are you sure?', performDelete);
   };
 
   const submitReview = async () => {
     if (!comment.trim()) {
-      Alert.alert("Validation", "Please write a comment.");
+      showAlert("Validation", "Please write a comment.");
       return;
     }
 
@@ -109,10 +101,10 @@ const RentalHistoryScreen = ({ navigation }) => {
         setUserReviews([...userReviews, res.data]);
       }
 
-      Alert.alert('Success', `Review ${isEditing ? 'updated' : 'added'} successfully!`);
+      showAlert('Success', `Review ${isEditing ? 'updated' : 'added'} successfully!`);
       setShowReviewModal(false);
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || "Action failed.");
+      showAlert('Error', error.response?.data?.message || "Action failed.");
     } finally {
       setSubmittingReview(false);
     }
@@ -269,14 +261,14 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#111318', marginBottom: 5 },
   modalSub: { fontSize: 13, color: '#666', marginBottom: 20 },
 
-  starsRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10 },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20 },
   starIcon: { fontSize: 40 },
   starSelected: { color: '#FFD700' },
   starUnselected: { color: '#e0e0e0' },
 
   commentInput: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee', borderRadius: 10, padding: 15, height: 100, textAlignVertical: 'top', fontSize: 14, marginBottom: 20 },
 
-  modalActions: { flexDirection: 'row', gap: 10 },
+  modalActions: { flexDirection: 'row' },
   cancelBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#f0f0f0' },
   cancelBtnTxt: { color: '#333', fontWeight: 'bold' },
   submitBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#c9a052' },
@@ -287,7 +279,7 @@ const styles = StyleSheet.create({
   yourReviewLabel: { fontSize: 10, color: '#888', fontWeight: 'bold' },
   reviewStars: { color: '#c9a052', fontSize: 14, marginVertical: 2 },
   reviewComment: { fontSize: 12, color: '#555', fontStyle: 'italic' },
-  reviewActions: { flexDirection: 'row', gap: 10 },
+  reviewActions: { flexDirection: 'row' },
   actionBtn: { width: 35, height: 35, borderRadius: 8, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
 });
 

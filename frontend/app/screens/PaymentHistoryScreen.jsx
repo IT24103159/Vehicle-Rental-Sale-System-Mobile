@@ -8,10 +8,10 @@ import {
   StatusBar,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 
 const PaymentHistoryScreen = ({ navigation }) => {
   const [payments, setPayments] = useState([]);
@@ -30,7 +30,7 @@ const PaymentHistoryScreen = ({ navigation }) => {
       setPayments(response.data);
     } catch (error) {
       console.error('Fetch history error:', error);
-      Alert.alert('Error', 'Failed to load your payment history.');
+      showAlert('Error', 'Failed to load your payment history.');
     } finally {
       setLoading(false);
     }

@@ -40,6 +40,21 @@ exports.createBooking = async (req, res) => {
       if (promo) promoId = promo._id;
     }
 
+    // Re-check availability before creating (Safety measure)
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const existingBooking = await Booking.findOne({
+      vehicleRentId,
+      bookingStatus: { $in: ['Confirmed', 'Pending Payment'] },
+      $or: [
+        { startDate: { $lte: end }, endDate: { $gte: start } }
+      ]
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({ message: 'Vehicle is already booked for these dates.' });
+    }
+
     const booking = await Booking.create({
       customerId,
       vehicleRentId,

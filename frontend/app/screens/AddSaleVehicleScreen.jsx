@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   StatusBar,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Platform,
   Image
@@ -15,6 +15,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
+import CustomPicker from '../components/CustomPicker';
 
 const AddSaleVehicleScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -64,7 +66,7 @@ const AddSaleVehicleScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.log('Error picking document', error);
-      Alert.alert("Error", "Could not pick PDF document.");
+      showAlert("Error", "Could not pick PDF document.");
     }
   };
 
@@ -74,7 +76,7 @@ const AddSaleVehicleScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.price || !formData.brand) {
-      Alert.alert("Required", "Please fill Name, Brand, and Price");
+      showAlert("Required", "Please fill Name, Brand, and Price");
       return;
     }
 
@@ -125,11 +127,12 @@ const AddSaleVehicleScreen = ({ navigation }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      Alert.alert("Success", "Sale vehicle added successfully!");
-      navigation.goBack();
+      showAlert("Success", "Sale vehicle added successfully!", () => {
+        navigation.goBack();
+      });
     } catch (err) {
       console.log(err);
-      Alert.alert("Error", "Failed to add vehicle");
+      showAlert("Error", "Failed to add vehicle");
     } finally {
       setLoading(false);
     }
@@ -157,28 +160,28 @@ const AddSaleVehicleScreen = ({ navigation }) => {
           
           <View style={styles.row}>
             <View style={styles.col}>
-              <Text style={styles.smallLabel}>CONDITION</Text>
-              <select 
-                style={styles.webSelect} 
-                value={formData.conditionStatus} 
-                onChange={e => inputChange('conditionStatus', e.target.value)}
-              >
-                <option value="Brand New">Brand New</option>
-                <option value="Registered">Registered</option>
-                <option value="Reconditioned">Reconditioned</option>
-              </select>
+              <CustomPicker 
+                label="CONDITION"
+                value={formData.conditionStatus}
+                onValueChange={v => inputChange('conditionStatus', v)}
+                options={[
+                  { label: 'Brand New', value: 'Brand New' },
+                  { label: 'Registered', value: 'Registered' },
+                  { label: 'Reconditioned', value: 'Reconditioned' },
+                ]}
+              />
             </View>
-            <View style={styles.col}>
-              <Text style={styles.smallLabel}>TRANSMISSION</Text>
-              <select 
-                style={styles.webSelect} 
-                value={formData.transmission} 
-                onChange={e => inputChange('transmission', e.target.value)}
-              >
-                <option value="Auto">Auto</option>
-                <option value="Manual">Manual</option>
-                <option value="Tiptronic">Tiptronic</option>
-              </select>
+            <View style={[styles.col, { marginLeft: 10 }]}>
+              <CustomPicker 
+                label="TRANSMISSION"
+                value={formData.transmission}
+                onValueChange={v => inputChange('transmission', v)}
+                options={[
+                  { label: 'Auto', value: 'Auto' },
+                  { label: 'Manual', value: 'Manual' },
+                  { label: 'Tiptronic', value: 'Tiptronic' },
+                ]}
+              />
             </View>
           </View>
 

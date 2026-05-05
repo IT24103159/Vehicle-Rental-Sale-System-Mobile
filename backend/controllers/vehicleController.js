@@ -13,7 +13,7 @@ exports.getAllRentVehicles = async (req, res) => {
     if (fuelType) query.fuelType = fuelType;
     if (maxPrice) query.dailyRate = { $lte: Number(maxPrice) };
 
-    const vehicles = await VehicleRent.find(query).populate('promotion').sort({ createdAt: -1 });
+    const vehicles = await VehicleRent.find({ ...query, status: 'Available' }).populate('promotion').sort({ createdAt: -1 });
     res.json(vehicles);
   } catch (error) {
     res.status(500).json({ message: error.message });

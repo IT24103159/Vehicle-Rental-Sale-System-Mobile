@@ -14,6 +14,7 @@ import {
   Platform
 } from 'react-native';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 import CustomHeader from '../components/CustomHeader';
 
 const AdminInquiriesScreen = ({ navigation }) => {
@@ -35,8 +36,7 @@ const AdminInquiriesScreen = ({ navigation }) => {
       setInquiries(response.data);
     } catch (error) {
       console.error(error);
-      if (Platform.OS === 'web') window.alert("Failed to load inquiries");
-      else Alert.alert('Error', 'Failed to load inquiries');
+      showAlert('Error', 'Failed to load inquiries');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -56,8 +56,7 @@ const AdminInquiriesScreen = ({ navigation }) => {
 
   const submitReply = async () => {
     if (!replyMessage.trim()) {
-      if (Platform.OS === 'web') window.alert("Please enter a reply message");
-      else Alert.alert("Error", "Please enter a reply message");
+      showAlert("Error", "Please enter a reply message");
       return;
     }
 
@@ -73,27 +72,18 @@ const AdminInquiriesScreen = ({ navigation }) => {
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Failed to update inquiry';
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert("Error", msg);
+      showAlert("Error", msg);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleFinalizeSale = (inq) => {
-    if (Platform.OS === 'web') {
-      if (!window.confirm("Finalize this sale? This will mark the vehicle as sold and reject all other inquiries for this vehicle.")) return;
-      executeFinalizeSale(inq);
-    } else {
-      Alert.alert(
-        "Finalize Sale",
-        "Are you sure? This will mark the vehicle as sold and reject all other inquiries for it.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Finalize", style: "destructive", onPress: () => executeFinalizeSale(inq) }
-        ]
-      );
-    }
+    showConfirm(
+      "Finalize Sale",
+      "Finalize this sale? This will mark the vehicle as sold and reject all other inquiries for this vehicle.",
+      () => executeFinalizeSale(inq)
+    );
   };
 
   const executeFinalizeSale = async (inq) => {
@@ -104,48 +94,35 @@ const AdminInquiriesScreen = ({ navigation }) => {
         inquiryId: inq._id
       });
       
-      if (Platform.OS === 'web') window.alert("Sale Finalized Successfully!");
-      else Alert.alert("Success", "Sale Finalized Successfully!");
-      
+      showAlert("Success", "Sale Finalized Successfully!");
       fetchInquiries();
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Failed to finalize sale';
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert("Error", msg);
+      showAlert("Error", msg);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteInquiry = (id) => {
-    if (Platform.OS === 'web') {
-      if (!window.confirm("Are you sure you want to delete this inquiry? This action cannot be undone.")) return;
-      executeDelete(id);
-    } else {
-      Alert.alert(
-        "Delete Inquiry",
-        "Are you sure? This action will permanently remove the inquiry from the database.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Delete", style: "destructive", onPress: () => executeDelete(id) }
-        ]
-      );
-    }
+    showConfirm(
+      "Delete Inquiry",
+      "Are you sure you want to delete this inquiry? This action cannot be undone.",
+      () => executeDelete(id)
+    );
   };
 
   const executeDelete = async (id) => {
     try {
       setSubmitting(true);
       await api.delete(`/inquiries/admin/${id}`);
-      if (Platform.OS === 'web') window.alert("Inquiry deleted successfully");
-      else Alert.alert("Success", "Inquiry deleted successfully");
+      showAlert("Success", "Inquiry deleted successfully");
       fetchInquiries();
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Failed to delete inquiry';
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert("Error", msg);
+      showAlert("Error", msg);
     } finally {
       setSubmitting(false);
     }
@@ -319,7 +296,7 @@ const styles = StyleSheet.create({
   msgLabel: { fontSize: 12, color: '#888', marginBottom: 4 },
   msgText: { fontSize: 14, color: '#333', lineHeight: 20 },
 
-  actionsRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  actionsRow: { flexDirection: 'row', marginTop: 10 },
   replyBtn: { flex: 1, backgroundColor: '#e2e8f0', padding: 12, borderRadius: 8, alignItems: 'center' },
   btnTxt: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
   finalizeBtn: { flex: 1.5, backgroundColor: '#c9a052', padding: 12, borderRadius: 8, alignItems: 'center' },
@@ -332,13 +309,13 @@ const styles = StyleSheet.create({
   modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#111' },
   label: { fontSize: 13, color: '#666', marginBottom: 8, marginTop: 10 },
-  statusRow: { flexDirection: 'row', gap: 10, marginBottom: 15 },
+  statusRow: { flexDirection: 'row', marginBottom: 15 },
   statusChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
   statusChipActive: { backgroundColor: '#111', borderColor: '#111' },
   statusChipTxt: { fontSize: 12, color: '#666' },
   statusChipTxtActive: { color: '#fff', fontWeight: 'bold' },
   input: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee', borderRadius: 10, padding: 15, height: 100, textAlignVertical: 'top', marginBottom: 20 },
-  modalBtnRow: { flexDirection: 'row', gap: 10 },
+  modalBtnRow: { flexDirection: 'row' },
   cancelBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#f0f0f0' },
   cancelBtnTxt: { color: '#333', fontWeight: 'bold' },
   submitBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#c9a052' },

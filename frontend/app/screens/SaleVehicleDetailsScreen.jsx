@@ -16,6 +16,7 @@ import {
   Linking,
 } from 'react-native';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 import CustomHeader from '../components/CustomHeader';
 
 const SaleVehicleDetailsScreen = ({ route, navigation }) => {
@@ -31,9 +32,10 @@ const SaleVehicleDetailsScreen = ({ route, navigation }) => {
   const openScanReport = () => {
     if (vehicle.scanReportUrl) {
       // If it's a relative URL, prepend BASE_URL, else use as is
+      const { getAssetsBaseUrl } = require('../../services/api');
       const url = vehicle.scanReportUrl.startsWith('http') 
         ? vehicle.scanReportUrl 
-        : `http://10.0.2.2:5000${vehicle.scanReportUrl}`; // Fallback base URL for Android
+        : `${getAssetsBaseUrl()}${vehicle.scanReportUrl}`;
       Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
     }
   };
@@ -46,8 +48,7 @@ const SaleVehicleDetailsScreen = ({ route, navigation }) => {
 
   const submitInquiry = async () => {
     if (!message.trim()) {
-      if (Platform.OS === 'web') window.alert("Validation Error: Please enter a message");
-      else Alert.alert("Validation Error", "Please enter a message");
+      showAlert("Validation Error", "Please enter a message");
       return;
     }
 
@@ -59,15 +60,13 @@ const SaleVehicleDetailsScreen = ({ route, navigation }) => {
         message: message.trim()
       });
 
-      if (Platform.OS === 'web') window.alert("Inquiry sent successfully!");
-      else Alert.alert('Success', "Inquiry sent successfully!");
-      
-      setShowModal(false);
-      navigation.goBack();
+      showAlert('Success', "Inquiry sent successfully!", () => {
+        setShowModal(false);
+        navigation.goBack();
+      });
     } catch (error) {
       const msg = error.response?.data?.message || "Failed to send inquiry.";
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Error', msg);
+      showAlert('Error', msg);
     } finally {
       setSubmitting(false);
     }
@@ -207,7 +206,7 @@ const styles = StyleSheet.create({
   conditionTxt: { color: '#2e7d32', fontWeight: 'bold', fontSize: 10 },
   price: { fontSize: 24, fontWeight: 'bold', color: '#c9a052', marginTop: 10, marginBottom: 20 },
 
-  specsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 },
+  specsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   specBox: { width: '48%', backgroundColor: '#f9f9f9', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
   specIcon: { fontSize: 20, marginBottom: 5 },
   specLabel: { fontSize: 10, color: '#888', textTransform: 'uppercase' },
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
   reportBtnDisabled: { opacity: 0.5 },
   reportBtnTxt: { color: '#334155', fontWeight: 'bold', fontSize: 14 },
 
-  actionRow: { flexDirection: 'row', gap: 10 },
+  actionRow: { flexDirection: 'row' },
   negotiateBtn: { flex: 1, backgroundColor: '#333', padding: 16, borderRadius: 10, alignItems: 'center' },
   negotiateBtnTxt: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
   buyBtn: { flex: 1, backgroundColor: '#c9a052', padding: 16, borderRadius: 10, alignItems: 'center' },
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#111318', marginBottom: 5 },
   modalSub: { fontSize: 13, color: '#666', marginBottom: 20 },
   messageInput: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee', borderRadius: 10, padding: 15, height: 100, textAlignVertical: 'top', fontSize: 14, marginBottom: 20 },
-  modalActions: { flexDirection: 'row', gap: 10 },
+  modalActions: { flexDirection: 'row' },
   cancelBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#f0f0f0' },
   cancelBtnTxt: { color: '#333', fontWeight: 'bold' },
   submitBtn: { flex: 1, padding: 15, borderRadius: 10, alignItems: 'center', backgroundColor: '#c9a052' },

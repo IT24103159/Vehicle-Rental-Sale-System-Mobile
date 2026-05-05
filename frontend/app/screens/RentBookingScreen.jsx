@@ -10,11 +10,11 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 import { AuthContext } from '../../context/AuthContext';
 
 const RentBookingScreen = ({ route, navigation }) => {
@@ -107,7 +107,7 @@ const RentBookingScreen = ({ route, navigation }) => {
       const available = response.data; // Assuming backend returns boolean
       setIsAvailable(available);
       if (!available) {
-        Alert.alert('Notice', 'This vehicle is already booked for the selected dates.');
+        showAlert('Notice', 'This vehicle is already booked for the selected dates.');
       }
     } catch (err) {
       console.log('Availability check failed', err);
@@ -136,8 +136,7 @@ const RentBookingScreen = ({ route, navigation }) => {
 
   const handleApplyPromo = async () => {
     if (!costDetails) {
-      if (Platform.OS === 'web') window.alert('Please enter valid dates first.');
-      else Alert.alert('Notice', 'Please enter valid dates first.');
+      showAlert('Notice', 'Please enter valid dates first.');
       return;
     }
     if (!promoCode) return;
@@ -161,8 +160,7 @@ const RentBookingScreen = ({ route, navigation }) => {
         discountAmount,
         finalPrice
       });
-      if (Platform.OS === 'web') window.alert(`Success: Promo code applied successfully! (${promo.discountPercent}% OFF)`);
-      else Alert.alert('Success', `Promo code applied successfully! (${promo.discountPercent}% OFF)`);
+      showAlert('Success', `Promo code applied successfully! (${promo.discountPercent}% OFF)`);
     } catch (err) {
       setDiscountDetails(null);
       setPromoError(err.response?.data?.message || 'Invalid or expired promo code.');
@@ -172,19 +170,18 @@ const RentBookingScreen = ({ route, navigation }) => {
   };
 
   const handleSubmit = async () => {
-    const showAlert = (title, msg) => {
-      if (Platform.OS === 'web') window.alert(`${title}: ${msg}`);
-      else Alert.alert(title, msg);
+    const doAlert = (title, msg) => {
+      showAlert(title, msg);
     };
 
     if (!user) {
-      showAlert('Login Required', 'You need to login to make a booking.');
+      doAlert('Login Required', 'You need to login to make a booking.');
       navigation.navigate('Login');
       return;
     }
 
     if (!isAvailable) {
-      showAlert('Error', 'Cannot proceed. Vehicle is not available for these dates.');
+      doAlert('Error', 'Cannot proceed. Vehicle is not available for these dates.');
       return;
     }
 
@@ -193,11 +190,11 @@ const RentBookingScreen = ({ route, navigation }) => {
     const start = new Date(formData.startDate);
     
     if (start < today) {
-      showAlert('Error', 'Start date cannot be in the past.');
+      doAlert('Error', 'Start date cannot be in the past.');
       return;
     }
     if (!costDetails) {
-      showAlert('Error', 'Return date must be at or after the Pick-up date.');
+      doAlert('Error', 'Return date must be at or after the Pick-up date.');
       return;
     }
 
@@ -222,16 +219,11 @@ const RentBookingScreen = ({ route, navigation }) => {
           vehicleName: vehicle.name 
         });
       } else {
-        Alert.alert('Success', 'Booking Request Sent Successfully!', [
-          { 
-            text: 'OK', 
-            onPress: () => navigation.navigate('Payment', { 
-              bookingId: response.data._id, 
-              totalCost: finalTotalCost, 
-              vehicleName: vehicle.name 
-            }) 
-          }
-        ]);
+        showAlert('Success', 'Booking Request Sent Successfully!', () => navigation.navigate('Payment', { 
+          bookingId: response.data._id, 
+          totalCost: finalTotalCost, 
+          vehicleName: vehicle.name 
+        }));
       }
       
     } catch (err) {
@@ -239,11 +231,7 @@ const RentBookingScreen = ({ route, navigation }) => {
       const msg = err.response?.data?.message || err.response?.data || err.message || 'Unknown Error';
       const status = err.response?.status ? ` (Status: ${err.response.status})` : '';
       
-      if (Platform.OS === 'web') {
-        window.alert('Error Details: ' + msg + status);
-      } else {
-        Alert.alert('Error', msg + status);
-      }
+      showAlert('Error', msg + status);
     } finally {
       setSubmitting(false);
     }
@@ -365,9 +353,9 @@ const RentBookingScreen = ({ route, navigation }) => {
                   editable={!discountDetails}
                 />
                 <TouchableOpacity 
-                  style={[styles.promoBtn, (isApplyingPromo || discountDetails || !promoCode) && styles.promoBtnDisabled]}
+                  style={[styles.promoBtn, (isApplyingPromo || !!discountDetails || !promoCode) && styles.promoBtnDisabled]}
                   onPress={handleApplyPromo}
-                  disabled={isApplyingPromo || discountDetails || !promoCode}
+                  disabled={!!(isApplyingPromo || discountDetails || !promoCode)}
                 >
                   <Text style={styles.promoBtnTxt}>{isApplyingPromo ? '...' : 'APPLY'}</Text>
                 </TouchableOpacity>
@@ -388,7 +376,7 @@ const RentBookingScreen = ({ route, navigation }) => {
           )}
 
           <TouchableOpacity 
-            style={[styles.submitBtn, (!isAvailable || checkingAvailability || !costDetails) && styles.submitBtnDisabled]}
+            style={[styles.submitBtn, (!isAvailable || checkingAvailability || !costDetails || submitting) && styles.submitBtnDisabled]}
             onPress={handleSubmit}
             disabled={!isAvailable || checkingAvailability || !costDetails || submitting}
           >
@@ -458,8 +446,8 @@ const styles = StyleSheet.create({
   priceLabelDiscount: { color: '#2e7d32', fontSize: 13 },
   priceValueDiscount: { color: '#2e7d32', fontWeight: 'bold', fontSize: 13 },
 
-  promoArea: { flexDirection: 'row', marginTop: 10, gap: 10 },
-  promoInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 10, fontSize: 12 },
+  promoArea: { flexDirection: 'row', marginTop: 10 },
+  promoInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 10, fontSize: 12, marginRight: 10 },
   promoBtn: { backgroundColor: '#111318', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, justifyContent: 'center' },
   promoBtnDisabled: { backgroundColor: '#ccc' },
   promoBtnTxt: { color: '#fff', fontSize: 10, fontWeight: 'bold' },

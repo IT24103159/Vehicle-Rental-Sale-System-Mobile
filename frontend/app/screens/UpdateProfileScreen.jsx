@@ -17,6 +17,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const UpdateProfileScreen = ({ navigation }) => {
   const { user, setUser, logout } = useContext(AuthContext);
@@ -128,20 +129,11 @@ const UpdateProfileScreen = ({ navigation }) => {
       setFormData({ ...formData, profilePic: '' });
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to remove your profile picture?')) {
-        performRemove();
-      }
-    } else {
-      Alert.alert(
-        'Remove Profile Picture',
-        'Are you sure you want to remove your profile picture?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Remove', style: 'destructive', onPress: performRemove },
-        ]
-      );
-    }
+    showConfirm(
+      'Remove Profile Picture',
+      'Are you sure you want to remove your profile picture?',
+      performRemove
+    );
   };
 
   return (
@@ -410,7 +402,7 @@ const styles = StyleSheet.create({
   placeholderImg: { width: '100%', height: '100%', backgroundColor: '#c9a052', justifyContent: 'center', alignItems: 'center' },
   placeholderTxt: { color: '#fff', fontSize: 40, fontWeight: 'bold' },
   loaderOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
-  imageBtns: { flexDirection: 'row', gap: 10 },
+  imageBtns: { flexDirection: 'row' },
   pickBtn: { backgroundColor: '#f0ebe0', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#dcd4c0' },
   pickBtnTxt: { fontSize: 13, color: '#111318', fontWeight: '600' },
   deleteBtn: { backgroundColor: '#fff', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#ffcdd2' },

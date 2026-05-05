@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
+import { showAlert, showConfirm } from '../../services/alertHelper';
 
 const FleetManagementScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('rent'); // 'rent' or 'sale'
@@ -34,7 +35,7 @@ const FleetManagementScreen = ({ navigation }) => {
       setVehicles(response.data);
     } catch (error) {
       console.error('Fetch vehicles error:', error);
-      Alert.alert('Error', 'Failed to load vehicles');
+      showAlert('Error', 'Failed to load vehicles');
     } finally {
       setLoading(false);
     }
@@ -48,20 +49,13 @@ const FleetManagementScreen = ({ navigation }) => {
         // If it doesn't, you'll need to create it in vehicleRoutes.js
         await api.delete(endpoint);
         fetchVehicles();
-        Alert.alert('Success', 'Vehicle deleted successfully');
+        showAlert('Success', 'Vehicle deleted successfully');
       } catch (error) {
-        Alert.alert('Error', 'Failed to delete vehicle. Endpoint might be missing in backend.');
+        showAlert('Error', 'Failed to delete vehicle.');
       }
     };
 
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Are you sure you want to delete ${name}?`)) confirmDelete();
-    } else {
-      Alert.alert('Confirm Delete', `Permanently delete ${name}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: confirmDelete }
-      ]);
-    }
+    showConfirm('Confirm Delete', `Permanently delete ${name}?`, confirmDelete);
   };
 
   return (
@@ -177,7 +171,7 @@ const FleetManagementScreen = ({ navigation }) => {
                   </View>
 
                   {/* Actions Column */}
-                  <View style={[styles.td, { width: 120, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 }]}>
+                  <View style={[styles.td, { width: 120, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
 
                     <TouchableOpacity
                       style={styles.actionBtn}
@@ -220,7 +214,7 @@ const styles = StyleSheet.create({
   addBtn: { backgroundColor: '#111318', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   addBtnTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
 
-  tabContainer: { flexDirection: 'row', gap: 10, paddingBottom: 15 },
+  tabContainer: { flexDirection: 'row', paddingBottom: 15 },
   tab: { paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd' },
   activeTab: { backgroundColor: '#c9a052', borderColor: '#c9a052' },
   tabTxt: { fontSize: 12, fontWeight: 'bold', color: '#555' },

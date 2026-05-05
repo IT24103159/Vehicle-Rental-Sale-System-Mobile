@@ -14,9 +14,11 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
+import { showAlert } from '../../services/alertHelper';
 import VehicleCard from '../components/VehicleCard';
 import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
+import CustomPicker from '../components/CustomPicker';
 
 const RentGalleryScreen = ({ navigation }) => {
   const [vehicles, setVehicles] = useState([]);
@@ -63,11 +65,7 @@ const RentGalleryScreen = ({ navigation }) => {
   const applyFilters = (query = searchQuery, activeFilters = filters) => {
     // Validation for negative values
     if (activeFilters.maxPrice && parseFloat(activeFilters.maxPrice) < 0) {
-      if (Platform.OS === 'web') {
-        window.alert('Invalid Price: Max price cannot be negative.');
-      } else {
-        Alert.alert('Invalid Price', 'Max price cannot be negative.');
-      }
+      showAlert('Invalid Price', 'Max price cannot be negative.');
       return;
     }
 
@@ -142,54 +140,70 @@ const RentGalleryScreen = ({ navigation }) => {
                   onChangeText={t => setFilters({...filters, name: t})} 
                 />
 
-                <Text style={styles.label}>VEHICLE TYPE</Text>
-                <select style={styles.webSelect} value={filters.type} onChange={e => setFilters({...filters, type: e.target.value})}>
-                  <option value="All">All Types</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="SUV">SUV</option>
-                  <option value="Hatchback">Hatchback</option>
-                  <option value="Van">Van</option>
-                </select>
+                <CustomPicker 
+                  label="VEHICLE TYPE"
+                  value={filters.type}
+                  onValueChange={v => setFilters({...filters, type: v})}
+                  options={[
+                    { label: 'All Types', value: 'All' },
+                    { label: 'Sedan', value: 'Sedan' },
+                    { label: 'SUV', value: 'SUV' },
+                    { label: 'Hatchback', value: 'Hatchback' },
+                    { label: 'Van', value: 'Van' },
+                  ]}
+                />
 
                 <View style={styles.row}>
                   <View style={styles.col}>
-                    <Text style={styles.label}>TRANSMISSION</Text>
-                    <select style={styles.webSelect} value={filters.gearType} onChange={e => setFilters({...filters, gearType: e.target.value})}>
-                      <option value="Any">Any</option>
-                      <option value="Auto">Auto</option>
-                      <option value="Manual">Manual</option>
-                    </select>
+                    <CustomPicker 
+                      label="TRANSMISSION"
+                      value={filters.gearType}
+                      onValueChange={v => setFilters({...filters, gearType: v})}
+                      options={[
+                        { label: 'Any', value: 'Any' },
+                        { label: 'Auto', value: 'Auto' },
+                        { label: 'Manual', value: 'Manual' },
+                      ]}
+                    />
                   </View>
-                  <View style={styles.col}>
-                    <Text style={styles.label}>FUEL TYPE</Text>
-                    <select style={styles.webSelect} value={filters.fuelType} onChange={e => setFilters({...filters, fuelType: e.target.value})}>
-                      <option value="Any">Any</option>
-                      <option value="Petrol">Petrol</option>
-                      <option value="Diesel">Diesel</option>
-                      <option value="Hybrid">Hybrid</option>
-                    </select>
+                  <View style={[styles.col, { marginLeft: 10 }]}>
+                    <CustomPicker 
+                      label="FUEL TYPE"
+                      value={filters.fuelType}
+                      onValueChange={v => setFilters({...filters, fuelType: v})}
+                      options={[
+                        { label: 'Any', value: 'Any' },
+                        { label: 'Petrol', value: 'Petrol' },
+                        { label: 'Diesel', value: 'Diesel' },
+                        { label: 'Hybrid', value: 'Hybrid' },
+                      ]}
+                    />
                   </View>
                 </View>
 
                 <View style={styles.row}>
                   <View style={styles.col}>
-                    <Text style={styles.label}>SEATS</Text>
-                    <select style={styles.webSelect} value={filters.seats} onChange={e => setFilters({...filters, seats: e.target.value})}>
-                      <option value="Any">Any</option>
-                      <option value="2">2 Seats</option>
-                      <option value="4">4 Seats</option>
-                      <option value="5">5 Seats</option>
-                      <option value="7">7 Seats</option>
-                      <option value="9">9+ Seats</option>
-                    </select>
+                    <CustomPicker 
+                      label="SEATS"
+                      value={filters.seats}
+                      onValueChange={v => setFilters({...filters, seats: v})}
+                      options={[
+                        { label: 'Any', value: 'Any' },
+                        { label: '2 Seats', value: '2' },
+                        { label: '4 Seats', value: '4' },
+                        { label: '5 Seats', value: '5' },
+                        { label: '7 Seats', value: '7' },
+                        { label: '9+ Seats', value: '9' },
+                      ]}
+                    />
                   </View>
-                  <View style={styles.col}>
-                    <Text style={styles.label}>MAX PRICE (LKR/DAY)</Text>
+                  <View style={[styles.col, { marginLeft: 10 }]}>
+                    <Text style={styles.label}>MAX PRICE (RS)</Text>
                     <TextInput 
                       style={styles.sidebarInput} 
-                      placeholder="e.g. 15000" 
+                      placeholder="e.g. 5000" 
                       placeholderTextColor="#555" 
-                      keyboardType="numeric" 
+                      keyboardType="numeric"
                       value={filters.maxPrice} 
                       onChangeText={t => setFilters({...filters, maxPrice: t})} 
                     />
@@ -245,7 +259,7 @@ const styles = StyleSheet.create({
   mainContainer: { flex: 1 },
   loadingArea: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: 16, paddingTop: 10 },
-  grid: { gap: 10 },
+  grid: { marginTop: 10 },
   emptyState: { padding: 50, alignItems: 'center' },
   emptyTxt: { color: '#888', fontSize: 14, textAlign: 'center' },
   
@@ -265,7 +279,7 @@ const styles = StyleSheet.create({
   filterHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   filterTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
   
-  row: { flexDirection: 'row', gap: 15, marginBottom: 15 },
+  row: { flexDirection: 'row', marginBottom: 15 },
   col: { flex: 1 },
   label: { color: '#888', fontSize: 10, fontWeight: 'bold', marginBottom: 8 },
   sidebarInput: { 
@@ -286,7 +300,7 @@ const styles = StyleSheet.create({
     fontSize: '14px' 
   },
   
-  actionRow: { flexDirection: 'row', marginTop: 20, gap: 15 },
+  actionRow: { flexDirection: 'row', marginTop: 20 },
   applyBtn: { flex: 2, backgroundColor: '#c9a052', paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
   applyBtnTxt: { color: '#000', fontWeight: 'bold' },
   resetBtn: { flex: 1, paddingVertical: 15, alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 12 },
